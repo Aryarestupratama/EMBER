@@ -27,9 +27,9 @@ return new class extends Migration
             $table->decimal('frp', 8, 2); // Fire Radiative Power
             $table->enum('daynight', ['D', 'N']);
 
-            // Dari BNPB InaRISK
-            $table->decimal('bnpb_risk_score', 8, 6)->nullable(); // null = NoData
-            $table->enum('bnpb_risk_category', [
+            // Dari Global Forest Watch (GFW) — tree cover loss sebagai proksi risiko
+            $table->decimal('gfw_risk_score', 8, 6)->nullable(); // null = gagal/tidak tersedia
+            $table->enum('gfw_risk_category', [
                 'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'
             ])->default('na');
 
@@ -45,7 +45,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['acq_date', 'confidence']);
-            $table->index(['bnpb_risk_category']);
+            $table->index(['gfw_risk_category']);
             $table->index(['latitude', 'longitude']);
         });
     }

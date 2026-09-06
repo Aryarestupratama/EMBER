@@ -8,18 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('area_check_cache', function (Blueprint $table) {
+        Schema::create('gfw_risk_cache', function (Blueprint $table) {
             $table->id();
-            $table->decimal('lat_rounded', 7, 3); // dibulatkan ~100m presisi
+            $table->decimal('lat_rounded', 7, 3);
             $table->decimal('lon_rounded', 7, 3);
 
-            $table->decimal('gfw_risk_score', 8, 6)->nullable();
-            $table->enum('gfw_risk_category', [
+            $table->string('geostore_id', 100)->nullable();
+            $table->decimal('buffer_area_ha', 12, 2)->nullable();
+            $table->decimal('loss_area_ha', 12, 2)->nullable();
+            $table->decimal('loss_percentage', 6, 2)->nullable();
+            $table->decimal('risk_score', 6, 5)->nullable();
+            $table->enum('risk_category', [
                 'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'
             ])->default('na');
-
-            $table->unsignedInteger('aqi')->nullable();
-            $table->string('nearest_city_name', 100)->nullable();
 
             $table->timestamp('cached_at');
             $table->timestamps();
@@ -30,6 +31,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('area_check_cache');
+        Schema::dropIfExists('gfw_risk_cache');
     }
 };

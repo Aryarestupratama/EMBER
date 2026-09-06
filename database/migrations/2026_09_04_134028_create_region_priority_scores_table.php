@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('region_id')->constrained()->cascadeOnDelete();
             $table->date('score_date');
 
-            $table->decimal('avg_bnpb_risk_score', 8, 6)->nullable();
+            $table->decimal('avg_gfw_risk_score', 8, 6)->nullable();
             $table->unsignedInteger('hotspot_count')->default(0);
             $table->decimal('normalized_hotspot_frequency', 6, 5)->default(0);
             $table->unsignedInteger('avg_aqi')->nullable();

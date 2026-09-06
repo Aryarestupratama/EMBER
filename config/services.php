@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'firms' => [
+        'map_key' => env('FIRMS_MAP_KEY'),
+    ],
+
+    'iqair' => [
+        'api_key' => env('IQAIR_API_KEY'),
+    ],
+
+    'gfw' => [
+        'api_key' => env('GFW_API_KEY'),
+    ],
+
 ];

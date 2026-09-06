@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('data_ingestion_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('source', 30); // 'firms' | 'inarisk' | 'iqair'
+            $table->string('source', 30);
             $table->enum('status', ['success', 'partial', 'failed']);
             $table->unsignedInteger('records_processed')->default(0);
             $table->text('error_message')->nullable();
