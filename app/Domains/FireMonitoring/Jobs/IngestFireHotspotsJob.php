@@ -4,6 +4,7 @@ namespace App\Domains\FireMonitoring\Jobs;
 
 use App\Domains\FireMonitoring\Models\DataIngestionLog;
 use App\Domains\FireMonitoring\Models\FireHotspot;
+use App\Domains\FireMonitoring\Models\Region;
 use App\Domains\FireMonitoring\Services\FirmsService;
 use App\Domains\FireMonitoring\Services\GfwService;
 use App\Domains\FireMonitoring\Services\IqairService;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Log;
 class IngestFireHotspotsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected \Illuminate\Support\Collection $regionsCache;
 
     /**
      * @param int|null $limit Batasi jumlah hotspot diproses (untuk testing).
@@ -61,6 +64,9 @@ class IngestFireHotspotsJob implements ShouldQueue
                 $hotspots = array_slice($hotspots, 0, $this->limit);
             }
 
+            // Ambil semua region SEKALI di luar loop (bukan query berulang per hotspot)
+            $this->regionsCache = Region::all(['id', 'centroid_lat', 'centroid_lon']);
+
             $hasFailures = false;
 
             foreach ($hotspots as $row) {
@@ -91,6 +97,7 @@ class IngestFireHotspotsJob implements ShouldQueue
                         'daynight'          => $row['daynight'],
                         'gfw_risk_score'    => $risk['risk_score'],
                         'gfw_risk_category' => $risk['risk_category'],
+                        'region_id'         => $this->findNearestRegion($lat, $lon),
                         'fetched_at'        => now(),
                     ];
 
@@ -118,7 +125,7 @@ class IngestFireHotspotsJob implements ShouldQueue
 
                     $processed++;
 
-                    echo "Processed: {$lat}, {$lon} -> {$risk['risk_category']} ({$risk['risk_score']})\n";
+                    echo "Processed: {$lat}, {$lon} -> {$risk['risk_category']} ({$risk['risk_score']}) region_id={$hotspotData['region_id']}\n";
                 } catch (\Throwable $e) {
                     Log::error('IngestFireHotspotsJob: gagal proses 1 hotspot', [
                         'message' => $e->getMessage(),
@@ -148,5 +155,52 @@ class IngestFireHotspotsJob implements ShouldQueue
 
             Log::error('IngestFireHotspotsJob gagal total', ['message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Cari region terdekat dari titik koordinat menggunakan formula Haversine
+     * terhadap centroid tiap region. Menggunakan cache in-memory ($this->regionsCache)
+     * agar tidak query database berulang kali per hotspot.
+     *
+     * Radius maksimum 100 km — kalau tidak ada region dalam radius ini,
+     * hotspot dibiarkan tanpa region (region_id null) daripada salah
+     * assign ke region yang jauh sekali (misal titik di tengah laut).
+     */
+    protected function findNearestRegion(float $lat, float $lon): ?int
+    {
+        if ($this->regionsCache->isEmpty()) {
+            return null;
+        }
+
+        $nearest = null;
+        $nearestDistance = PHP_FLOAT_MAX;
+
+        foreach ($this->regionsCache as $region) {
+            $distance = $this->haversineDistance(
+                $lat, $lon,
+                (float) $region->centroid_lat,
+                (float) $region->centroid_lon
+            );
+
+            if ($distance < $nearestDistance) {
+                $nearestDistance = $distance;
+                $nearest = $region;
+            }
+        }
+
+        return $nearestDistance <= 100 ? $nearest->id : null;
+    }
+
+    protected function haversineDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371; // km
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        $c = 2 * asin(sqrt($a));
+
+        return $earthRadius * $c;
     }
 }
