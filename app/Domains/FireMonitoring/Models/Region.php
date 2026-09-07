@@ -42,4 +42,9 @@ class Region extends Model
     {
         return $this->priorityScores()->latest('score_date')->first();
     }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }
