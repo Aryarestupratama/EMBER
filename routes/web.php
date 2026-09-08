@@ -13,7 +13,22 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', fn () => Inertia::render('Landing'))->name('home');
+Route::get('/', function (\App\Domains\FireMonitoring\Models\FireHotspot $hotspot) {
+    $today = now()->toDateString();
+
+    return \Inertia\Inertia::render('Landing', [
+        'stats' => [
+            'total_hotspots'    => \App\Domains\FireMonitoring\Models\FireHotspot::whereDate('acq_date', $today)->count(),
+            'high_risk_regions' => \App\Domains\FireMonitoring\Models\RegionPriorityScore::whereDate('score_date', $today)
+                ->whereIn('priority_rank_category', ['tinggi', 'sangat_tinggi'])
+                ->count(),
+        ],
+        'previewHotspots' => \App\Domains\FireMonitoring\Models\FireHotspot::whereDate('acq_date', $today)
+            ->select(['id', 'latitude', 'longitude', 'gfw_risk_category', 'confidence', 'frp'])
+            ->limit(50)
+            ->get(),
+    ]);
+})->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
