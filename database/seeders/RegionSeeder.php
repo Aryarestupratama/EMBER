@@ -254,11 +254,19 @@ class RegionSeeder extends Seeder
             ['name' => 'Kabupaten Paser', 'province' => 'Kalimantan Timur', 'slug' => 'kabupaten-paser-idn-34-10-1', 'lat' => -1.73327, 'lon' => 116.0948, 'area_km2' => 10604.44],
             ['name' => 'Kabupaten Penajam Paser Utara', 'province' => 'Kalimantan Timur', 'slug' => 'kabupaten-penajampaserutara-idn-34-11-1', 'lat' => -1.15748, 'lon' => 116.59775, 'area_km2' => 3252.97],
             ['name' => 'Kota Samarinda', 'province' => 'Kalimantan Timur', 'slug' => 'kota-samarinda-idn-34-12-1', 'lat' => -0.50066, 'lon' => 117.17871, 'area_km2' => 724.41],
-            ['name' => 'NA Bulungan', 'province' => 'Kalimantan Utara', 'slug' => 'na-bulungan-idn-35-4', 'lat' => 2.80118, 'lon' => 117.02428, 'area_km2' => 13092.49],
-            ['name' => 'NA Malinau', 'province' => 'Kalimantan Utara', 'slug' => 'na-malinau-idn-35-8', 'lat' => 2.47726, 'lon' => 115.71544, 'area_km2' => 39972.74],
-            ['name' => 'NA Nunukan', 'province' => 'Kalimantan Utara', 'slug' => 'na-nunukan-idn-35-9', 'lat' => 3.99329, 'lon' => 116.66838, 'area_km2' => 14133.61],
-            ['name' => 'NA Tana Tidung', 'province' => 'Kalimantan Utara', 'slug' => 'na-tanatidung-idn-35-13', 'lat' => 3.54969, 'lon' => 117.16949, 'area_km2' => 2831.87],
-            ['name' => 'NA Tarakan', 'province' => 'Kalimantan Utara', 'slug' => 'na-tarakan-idn-35-14', 'lat' => 3.35497, 'lon' => 117.60071, 'area_km2' => 244.76],
+            // Catatan perbaikan (referensi debugging dashboard 8 Sep 2026):
+            // 5 baris berikut awalnya bernilai 'NA {nama}' dengan slug 4-segmen
+            // (mis. 'na-bulungan-idn-35-4') karena kolom TYPE_2 kosong pada
+            // source GeoJSON GADM v4.1 khusus untuk Kalimantan Utara (provinsi
+            // termuda, dimekarkan dari Kalimantan Timur 2012 — kemungkinan
+            // metadata belum selengkap provinsi lain). Nama & slug diperbaiki
+            // manual berdasar tipe wilayah administratif yang sudah diketahui;
+            // koordinat/luas asli dari GADM tidak diubah.
+            ['name' => 'Kabupaten Bulungan', 'province' => 'Kalimantan Utara', 'slug' => 'kabupaten-bulungan-idn-35-4-1', 'lat' => 2.80118, 'lon' => 117.02428, 'area_km2' => 13092.49],
+            ['name' => 'Kabupaten Malinau', 'province' => 'Kalimantan Utara', 'slug' => 'kabupaten-malinau-idn-35-8-1', 'lat' => 2.47726, 'lon' => 115.71544, 'area_km2' => 39972.74],
+            ['name' => 'Kabupaten Nunukan', 'province' => 'Kalimantan Utara', 'slug' => 'kabupaten-nunukan-idn-35-9-1', 'lat' => 3.99329, 'lon' => 116.66838, 'area_km2' => 14133.61],
+            ['name' => 'Kabupaten Tana Tidung', 'province' => 'Kalimantan Utara', 'slug' => 'kabupaten-tanatidung-idn-35-13-1', 'lat' => 3.54969, 'lon' => 117.16949, 'area_km2' => 2831.87],
+            ['name' => 'Kota Tarakan', 'province' => 'Kalimantan Utara', 'slug' => 'kota-tarakan-idn-35-14-1', 'lat' => 3.35497, 'lon' => 117.60071, 'area_km2' => 244.76],
             ['name' => 'Kota Batam', 'province' => 'Kepulauan Riau', 'slug' => 'kota-batam-idn-16-1-1', 'lat' => 0.96512, 'lon' => 104.06416, 'area_km2' => 1033.4],
             ['name' => 'Kabupaten Bintan', 'province' => 'Kepulauan Riau', 'slug' => 'kabupaten-bintan-idn-16-2-1', 'lat' => 1.01228, 'lon' => 104.70072, 'area_km2' => 1333.53],
             ['name' => 'Kabupaten Karimun', 'province' => 'Kepulauan Riau', 'slug' => 'kabupaten-karimun-idn-16-3-1', 'lat' => 0.8251, 'lon' => 103.53047, 'area_km2' => 918.2],

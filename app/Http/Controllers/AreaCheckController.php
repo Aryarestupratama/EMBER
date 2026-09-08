@@ -6,6 +6,7 @@ use App\Domains\FireMonitoring\Models\AreaCheckCache;
 use App\Domains\FireMonitoring\Models\FireHotspot;
 use App\Domains\FireMonitoring\Services\GfwService;
 use App\Domains\FireMonitoring\Services\IqairService;
+use App\Domains\FireMonitoring\Services\MitigationHelper;
 use App\Http\Requests\AreaCheckRequest;
 use Inertia\Inertia;
 
@@ -56,6 +57,10 @@ class AreaCheckController extends Controller
 
         $nearbyHotspots = $this->findNearbyHotspots($lat, $lon, $radiusKm);
 
+        // Konten rekomendasi mitigasi diambil dari satu sumber kebenaran
+        // (config/ember.php via MitigationHelper), bukan dihardcode di frontend.
+        $mitigation = MitigationHelper::forLocation($cache->gfw_risk_category, $cache->aqi);
+
         return [
             'location' => ['lat' => $lat, 'lon' => $lon],
             'risk' => [
@@ -63,13 +68,18 @@ class AreaCheckController extends Controller
                 'category' => $cache->gfw_risk_category,
             ],
             'air_quality' => [
-                'aqi'  => $cache->aqi,
-                'city' => $cache->nearest_city_name,
+                'aqi'      => $cache->aqi,
+                'category' => MitigationHelper::getAqiCategory($cache->aqi),
+                'city'     => $cache->nearest_city_name,
             ],
             'nearby_hotspots' => [
                 'count'          => $nearbyHotspots->count(),
                 'nearest_km'     => $nearbyHotspots->first()['distance_km'] ?? null,
                 'radius_km'      => $radiusKm,
+            ],
+            'mitigation' => [
+                'fire_risk'    => $mitigation['fire_risk'],
+                'air_quality'  => $mitigation['air_quality'],
             ],
             'cached_at' => $cache->cached_at->toIso8601String(),
         ];

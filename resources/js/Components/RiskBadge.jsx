@@ -46,7 +46,7 @@ export default function RiskBadge({ category, className = '' }) {
     return (
         <Badge
             variant="outline"
-            className={`gap-1.5 border-0 font-medium ${config.badgeClass} ${className}`}
+            className={`gap-1.5 font-medium ${isNa ? '' : 'border-0'} ${config.badgeClass} ${className}`}
         >
             {isNa ? (
                 <HelpCircle className="h-3 w-3" strokeWidth={2.5} />

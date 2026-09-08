@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AreaCheckController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegionDetailController;
 use Illuminate\Support\Facades\Route;
@@ -13,22 +14,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function (\App\Domains\FireMonitoring\Models\FireHotspot $hotspot) {
-    $today = now()->toDateString();
-
-    return \Inertia\Inertia::render('Landing', [
-        'stats' => [
-            'total_hotspots'    => \App\Domains\FireMonitoring\Models\FireHotspot::whereDate('acq_date', $today)->count(),
-            'high_risk_regions' => \App\Domains\FireMonitoring\Models\RegionPriorityScore::whereDate('score_date', $today)
-                ->whereIn('priority_rank_category', ['tinggi', 'sangat_tinggi'])
-                ->count(),
-        ],
-        'previewHotspots' => \App\Domains\FireMonitoring\Models\FireHotspot::whereDate('acq_date', $today)
-            ->select(['id', 'latitude', 'longitude', 'gfw_risk_category', 'confidence', 'frp'])
-            ->limit(50)
-            ->get(),
-    ]);
-})->name('home');
+Route::get('/', [LandingController::class, 'index'])->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

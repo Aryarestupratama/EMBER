@@ -4,26 +4,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 
-const RECOMMENDATIONS = {
-    rendah: 'Kondisi wilayah ini relatif aman. Tetap waspada terhadap perubahan cuaca musim kemarau.',
-    sedang: 'Pantau perkembangan kondisi di wilayah ini secara berkala, terutama saat musim kemarau.',
-    tinggi: 'Kurangi aktivitas luar ruangan. Wilayah ini prioritas untuk monitoring & mitigasi karhutla.',
-    sangat_tinggi: 'Kurangi aktivitas luar ruangan secara signifikan. Wilayah ini prioritas tinggi untuk monitoring & mitigasi karhutla.',
-    na: 'Data risiko untuk lokasi ini belum tersedia. Lokasi kemungkinan berada di luar cakupan analisis (area non-hutan/lahan).',
+// Catatan: ambang batas AQI dan isi rekomendasi TIDAK didefinisikan di sini.
+// Keduanya berasal dari backend (MitigationHelper + config/ember.php) agar
+// tetap satu sumber kebenaran (Rules.md §7). Peta di bawah ini murni label
+// tampilan untuk kunci kategori yang dikirim backend, bukan logic ambang batas.
+const AQI_CATEGORY_LABELS = {
+    baik: 'Baik',
+    sedang: 'Sedang',
+    tidak_sehat: 'Tidak Sehat',
+    sangat_tidak_sehat: 'Sangat Tidak Sehat',
+    berbahaya: 'Berbahaya',
 };
 
-function aqiLabel(aqi) {
-    if (aqi === null) return null;
-    if (aqi <= 50) return 'Baik';
-    if (aqi <= 100) return 'Sedang';
-    if (aqi <= 150) return 'Tidak Sehat untuk Kelompok Sensitif';
-    if (aqi <= 200) return 'Tidak Sehat';
-    if (aqi <= 300) return 'Sangat Tidak Sehat';
-    return 'Berbahaya';
-}
-
 export default function SummaryCard({ result }) {
-    const { risk, air_quality, nearby_hotspots } = result;
+    const { risk, air_quality, nearby_hotspots, mitigation } = result;
 
     return (
         <Card className="border-black/5 shadow-sm">
@@ -51,7 +45,7 @@ export default function SummaryCard({ result }) {
                             <span className="tabular-nums text-lg font-semibold text-forest-dark">
                                 AQI {air_quality.aqi}
                             </span>{' '}
-                            — {aqiLabel(air_quality.aqi)}
+                            — {AQI_CATEGORY_LABELS[air_quality.category] ?? 'Kategori tidak diketahui'}
                             {air_quality.city && (
                                 <span className="text-ink/50"> · {air_quality.city}</span>
                             )}
@@ -82,13 +76,18 @@ export default function SummaryCard({ result }) {
                     )}
                 </div>
 
-                <div className="rounded-lg bg-canvas p-4">
+                <div className="rounded-lg bg-canvas p-4 space-y-3">
                     <p className="text-xs font-medium uppercase tracking-wide text-ink/40">
                         Rekomendasi
                     </p>
-                    <p className="mt-1.5 text-sm text-ink/80">
-                        {RECOMMENDATIONS[risk.category] ?? RECOMMENDATIONS.na}
+                    <p className="text-sm text-ink/80">
+                        {mitigation?.fire_risk?.short_text}
                     </p>
+                    {mitigation?.air_quality?.short_text && (
+                        <p className="text-sm text-ink/80">
+                            {mitigation.air_quality.short_text}
+                        </p>
+                    )}
                 </div>
 
                 <SourceCredit />

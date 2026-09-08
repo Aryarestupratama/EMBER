@@ -1,12 +1,61 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 // Sebelumnya: hex hardcode (#2D6A4F, #40916C, #74C69D) — duplikat dari token app.css.
 // Sekarang: pakai kelas Tailwind yang sudah di-generate dari token forest/fresh.
+//
+// `tooltip`: penjelasan singkat cara komponen ini dihitung, muncul saat hover
+// ikon info di sebelah label — supaya bobot 0.4/0.4/0.2 (Rules.md §3) tidak
+// terasa seperti angka acak bagi pengguna awam.
 const COMPONENTS = [
-    { key: 'gfw_risk', label: 'Risiko Deforestasi (GFW)', weight: 0.4, barClass: 'bg-forest-dark' },
-    { key: 'hotspot_frequency', label: 'Frekuensi Hotspot', weight: 0.4, barClass: 'bg-fresh' },
-    { key: 'aqi_impact', label: 'Dampak Kualitas Udara', weight: 0.2, barClass: 'bg-fresh-light' },
+    {
+        key: 'gfw_risk',
+        label: 'Risiko Deforestasi (GFW)',
+        weight: 0.4,
+        barClass: 'bg-forest-dark',
+        tooltip:
+            'Rata-rata persentase tutupan hutan yang hilang (tree cover loss) dalam radius 5 km di sekitar tiap hotspot wilayah ini sejak 2015, sebagai proksi risiko karhutla berulang — bukan prediksi resmi pemerintah.',
+    },
+    {
+        key: 'hotspot_frequency',
+        label: 'Frekuensi Hotspot',
+        weight: 0.4,
+        barClass: 'bg-fresh',
+        tooltip:
+            'Jumlah hotspot di wilayah ini dalam 7 hari terakhir, dinormalisasi relatif terhadap wilayah dengan jumlah hotspot terbanyak pada periode yang sama.',
+    },
+    {
+        key: 'aqi_impact',
+        label: 'Dampak Kualitas Udara',
+        weight: 0.2,
+        barClass: 'bg-fresh-light',
+        tooltip:
+            'Rata-rata AQI kota-kota terkait wilayah ini, dinormalisasi terhadap skala AQI US EPA (0–300). Diberi bobot lebih rendah karena AQI juga dipengaruhi faktor lain di luar karhutla, seperti kendaraan dan industri.',
+    },
 ];
+
+const PRIORITY_SCORE_TOOLTIP =
+    'Jumlah terbobot dari tiga komponen di atas (0.4 × risiko deforestasi + 0.4 × frekuensi hotspot + 0.2 × dampak AQI). Semakin tinggi skor, semakin diprioritaskan wilayah ini untuk monitoring dan mitigasi.';
+
+function InfoTooltip({ text }) {
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <button
+                    type="button"
+                    className="text-ink/30 hover:text-ink/60 transition-colors"
+                    aria-label="Penjelasan"
+                >
+                    <Info className="size-3.5" />
+                </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-64 text-sm">
+                {text}
+            </TooltipContent>
+        </Tooltip>
+    );
+}
 
 export default function ScoreBreakdown({ score }) {
     if (!score) {
@@ -50,9 +99,10 @@ export default function ScoreBreakdown({ score }) {
                     return (
                         <div key={c.key}>
                             <div className="mb-1 flex items-baseline justify-between text-sm">
-                                <span className="text-ink/70">
+                                <span className="flex items-center gap-1.5 text-ink/70">
                                     {c.label}{' '}
                                     <span className="text-xs text-ink/40">(bobot {c.weight})</span>
+                                    <InfoTooltip text={c.tooltip} />
                                 </span>
                                 <span className="tabular-nums font-medium text-ink">
                                     {unavailable ? (
@@ -84,7 +134,10 @@ export default function ScoreBreakdown({ score }) {
                 })}
 
                 <div className="flex items-baseline justify-between border-t border-black/5 pt-3 text-sm font-semibold">
-                    <span className="text-ink">Priority Score</span>
+                    <span className="flex items-center gap-1.5 text-ink">
+                        Priority Score
+                        <InfoTooltip text={PRIORITY_SCORE_TOOLTIP} />
+                    </span>
                     <span className="tabular-nums text-forest-dark">
                         {parseFloat(score.priority_score).toFixed(3)}
                     </span>

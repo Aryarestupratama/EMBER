@@ -41,6 +41,8 @@ class CalculateRegionPriorityJob implements ShouldQueue
 
         $aqiScaleMax = config('ember.aqi_scale.max');
 
+        $skippedRegions = 0;
+
         foreach ($regions as $region) {
             $hotspots = FireHotspot::where('region_id', $region->id)
                 ->where('acq_date', '>=', $sevenDaysAgo)
@@ -50,7 +52,25 @@ class CalculateRegionPriorityJob implements ShouldQueue
 
             $validRiskScores = $hotspots->pluck('gfw_risk_score')->filter(fn ($s) => ! is_null($s));
             $avgGfwRisk = $validRiskScores->isNotEmpty() ? $validRiskScores->avg() : null;
-            $normGfwRisk = $avgGfwRisk ?? 0;
+
+            // PENTING (Rules.md §2, null ≠ 0):
+            // - hotspotCount == 0 → memang tidak ada aktivitas kebakaran, wajar
+            //   normGfwRisk dianggap 0 (tidak ada sinyal risiko untuk dirata-ratakan).
+            // - hotspotCount > 0 TAPI semua gagal di-enrich GFW (avgGfwRisk null)
+            //   → ini KEGAGALAN DATA, bukan risiko nol. Wilayah ini dilewati untuk
+            //   hari ini (tidak insert row palsu), bukan didefault ke 0/'rendah'.
+            //   Job berikutnya akan mencoba lagi esok hari.
+            if ($hotspotCount > 0 && $avgGfwRisk === null) {
+                $skippedRegions++;
+                Log::warning('CalculateRegionPriorityJob: wilayah dilewati, semua hotspot gagal di-enrich GFW', [
+                    'region_id' => $region->id,
+                    'region_name' => $region->name,
+                    'hotspot_count' => $hotspotCount,
+                ]);
+                continue;
+            }
+
+            $normGfwRisk = $avgGfwRisk ?? 0; // aman sekarang: hanya jalan saat hotspotCount == 0
 
             $normHotspotFrequency = $maxHotspotCount > 0
                 ? round($hotspotCount / $maxHotspotCount, 5)
@@ -72,8 +92,11 @@ class CalculateRegionPriorityJob implements ShouldQueue
 
             $priorityCategory = $gfw->categorizeScore($priorityScore);
 
+            // Fallback ini sekarang murni jaga-jaga pembulatan floating point
+            // (skor di luar 0-1), BUKAN untuk menutupi kasus data gagal —
+            // kasus itu sudah ditangani lewat `continue` di atas.
             if ($priorityCategory === 'na') {
-                $priorityCategory = 'rendah';
+                $priorityCategory = $priorityScore > 1 ? 'sangat_tinggi' : 'rendah';
             }
 
             RegionPriorityScore::updateOrCreate(
@@ -90,10 +113,13 @@ class CalculateRegionPriorityJob implements ShouldQueue
             );
 
             if ($hotspotCount > 0) {
-                echo "{$region->name}: hotspot={$hotspotCount}, priority_score={$priorityScore} ({$priorityCategory})\n";
+                Log::debug("{$region->name}: hotspot={$hotspotCount}, priority_score={$priorityScore} ({$priorityCategory})");
             }
         }
 
-        Log::info('CalculateRegionPriorityJob selesai', ['regions_processed' => $regions->count()]);
+        Log::info('CalculateRegionPriorityJob selesai', [
+            'regions_processed' => $regions->count() - $skippedRegions,
+            'regions_skipped'   => $skippedRegions,
+        ]);
     }
 }
