@@ -14,6 +14,7 @@ class RegionDetailController extends Controller
 
         $hotspots = FireHotspot::where('region_id', $region->id)
             ->where('acq_date', '>=', now()->subDays(7))
+            ->orderByDesc('acq_date')
             ->get();
 
         return Inertia::render('RegionDetail', [
