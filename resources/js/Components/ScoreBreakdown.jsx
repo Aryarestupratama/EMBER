@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
@@ -89,7 +90,7 @@ export default function ScoreBreakdown({ score }) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-                {COMPONENTS.map((c) => {
+                {COMPONENTS.map((c, index) => {
                     const value = normalized[c.key];
                     const contribution = value * c.weight;
                     const unavailable =
@@ -123,9 +124,18 @@ export default function ScoreBreakdown({ score }) {
                                         }}
                                     />
                                 ) : (
-                                    <div
-                                        className={`h-full rounded-full transition-all ${c.barClass}`}
-                                        style={{ width: `${Math.min(value * 100, 100)}%` }}
+                                    // Lebar dianimasikan dari 0 -> nilai aslinya (bukan style
+                                    // width statis + `transition-all` seperti sebelumnya, yang
+                                    // cuma keliatan kalau value-nya berubah SETELAH mount, tidak
+                                    // pernah kejalan pas render pertama). delay di-stagger tiap
+                                    // baris (index * 0.12) + jeda kecil (0.25s) supaya mulai
+                                    // ngisi sesaat setelah card-nya sendiri selesai muncul
+                                    // (fadeUp di RegionDetail.jsx), bukan race bareng.
+                                    <motion.div
+                                        className={`h-full rounded-full ${c.barClass}`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(value * 100, 100)}%` }}
+                                        transition={{ duration: 0.9, ease: 'easeOut', delay: 0.25 + index * 0.12 }}
                                     />
                                 )}
                             </div>

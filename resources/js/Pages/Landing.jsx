@@ -1,5 +1,6 @@
+import { useRef } from 'react';
 import { Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import AppLayout from '@/Layouts/AppLayout';
 import ForestHeroSection from '@/components/ForestHeroSection';
 import MapView from '@/components/MapView';
@@ -24,6 +25,26 @@ const staggerContainer = (staggerChildren = 0.15, delayChildren = 0) => ({
     hidden: {},
     visible: { transition: { staggerChildren, delayChildren } },
 });
+
+// Warna literal (bukan token hex baru — nilainya disalin apa adanya dari
+// --color-fresh / --color-fresh-light / --color-risk-tinggi di app.css).
+// Ditulis literal karena Framer Motion cuma bisa interpolasi warna dengan
+// mulus dari string hex/rgb/hsl, bukan dari `var(--...)` atau `oklch(...)`.
+const HERO_TEXT_FROM = '#74C69D'; // fresh-light
+const HERO_TEXT_TO = '#E85D04'; // risk-tinggi
+const HERO_BUTTON_FROM = '#40916C'; // fresh
+const HERO_BUTTON_TO = '#E85D04'; // risk-tinggi
+
+// Sengaja TIDAK membungkus Button atau Link dengan motion(). Button di
+// project ini dibangun di atas @base-ui/react (bukan Radix Slot murni), dan
+// begitu child-nya (Link) dibungkus motion.create(), Slot-nya gagal
+// mendeteksi "single valid element" lalu fallback render <button> asli milik
+// Button DI LUAR + Link kita sebagai children biasa DI DALAM — makanya
+// muncul kotak-dalam-kotak. Solusinya: Button & Link tetap 100% plain
+// (persis pola tombol lain yang sudah pasti render benar), warnanya
+// "dititipkan" lewat CSS custom property di motion.div pembungkus (lihat
+// style={{ '--hero-btn-color': heroButtonColor }} di bawah), lalu tombolnya
+// tinggal baca var itu via class `bg-[var(--hero-btn-color)]`.
 
 // Warna aksen per step sengaja dibedakan (bukan cuma satu warna forest polos)
 // supaya section ini tidak terasa flat/monoton — tetap dari palet token yang
@@ -69,6 +90,26 @@ const ACCENT_CLASSES = {
 };
 
 export default function Landing({ stats, previewHotspots }) {
+    // Ref yang sama persis dipakai ForestHeroSection untuk useScroll internalnya
+    // (lihat forwardRef di ForestHeroSection.jsx). Dengan target & offset yang
+    // sama, heroProgress di sini selalu selaras dengan transisi forest -> fire
+    // di background — bukan animasi terpisah yang kebetulan mirip.
+    const heroRef = useRef(null);
+    const { scrollYProgress: heroProgress } = useScroll({
+        target: heroRef,
+        offset: ['start start', 'end end'],
+    });
+
+    // Rentang 0.1 -> 0.9 sengaja disamakan dengan fireInsetTop di
+    // ForestHeroSection, supaya teks & tombol berubah warna PAS di jendela
+    // waktu yang sama dengan api "memakan" hutan, bukan lebih cepat/lambat.
+    const indonesiaColor = useTransform(heroProgress, [0.1, 0.9], [HERO_TEXT_FROM, HERO_TEXT_TO], {
+        clamp: true,
+    });
+    const heroButtonColor = useTransform(heroProgress, [0.1, 0.9], [HERO_BUTTON_FROM, HERO_BUTTON_TO], {
+        clamp: true,
+    });
+
     return (
         <AppLayout
             title="EMBER — Monitoring Karhutla Indonesia"
@@ -78,7 +119,7 @@ export default function Landing({ stats, previewHotspots }) {
             mainClassName=""
         >
             {/* Hero — sticky-pinned, background bertransisi forest -> fire mengikuti scroll */}
-            <ForestHeroSection>
+            <ForestHeroSection ref={heroRef}>
                 <motion.div
                     variants={staggerContainer(0.18, 0.1)}
                     initial="hidden"
@@ -100,7 +141,7 @@ export default function Landing({ stats, previewHotspots }) {
                         className="font-heading text-4xl font-bold leading-tight text-white [text-shadow:0_2px_16px_rgb(0_0_0_/_55%)] lg:text-5xl"
                     >
                         Pantau Karhutla{' '}
-                        <span className="text-fresh-light">Indonesia</span>, Berbasis Data.
+                        <motion.span style={{ color: indonesiaColor }}>Indonesia</motion.span>, Berbasis Data.
                     </motion.h1>
 
                     <motion.p
@@ -112,16 +153,21 @@ export default function Landing({ stats, previewHotspots }) {
                         risiko karhutla di sekitar mereka.
                     </motion.p>
 
-                    <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                    <motion.div
+                        variants={fadeUp}
+                        style={{ '--hero-btn-color': heroButtonColor }}
+                        className="mt-8 flex flex-wrap items-center justify-center gap-3"
+                    >
                         <Button
-                            asChild
+                            render={
+                                <Link href={route('area-check')} className="inline-flex items-center gap-2" />
+                            }
+                            nativeButton={false}
                             size="lg"
-                            className="h-14 bg-risk-tinggi px-8 text-base hover:bg-risk-sangat-tinggi"
+                            className="h-14 bg-[var(--hero-btn-color)] px-8 text-base transition-[filter] hover:brightness-90"
                         >
-                            <Link href={route('area-check')} className="inline-flex items-center gap-2">
-                                <MapPin className="h-5 w-5" />
-                                Cek Daerah Kamu
-                            </Link>
+                            <MapPin className="h-5 w-5" />
+                            Cek Daerah Kamu
                         </Button>
                     </motion.div>
                 </motion.div>
@@ -264,49 +310,79 @@ export default function Landing({ stats, previewHotspots }) {
             </section>
 
             {/* Data Sources — trust signal */}
-            <section className="border-b border-black/5">
-                <div className="mx-auto max-w-7xl px-6 py-14 text-center">
-                    <h2 className="font-heading text-2xl font-bold text-ink">Data dari Sumber Tepercaya</h2>
-                    <p className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
+            <section className="relative overflow-hidden border-b border-black/5">
+                {/* Aksen dekoratif halus, konsisten dengan section Problem di atas */}
+                <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-forest-dark/[0.04] blur-3xl" />
+
+                <motion.div
+                    variants={staggerContainer(0.12)}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    className="relative mx-auto max-w-7xl px-6 py-14 text-center"
+                >
+                    <motion.h2 variants={fadeUp} className="font-heading text-2xl font-bold text-ink">
+                        Data dari Sumber Tepercaya
+                    </motion.h2>
+                    <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
                         EMBER tidak membuat data sendiri — semuanya diagregasi dari sumber resmi yang dapat
                         diverifikasi.
-                    </p>
+                    </motion.p>
 
-                    <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    <motion.div
+                        variants={staggerContainer(0.08)}
+                        className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+                    >
                         <SourceBlock name="NASA FIRMS" desc="Titik panas satelit VIIRS/MODIS" />
                         <SourceBlock name="Global Forest Watch" desc="Data deforestasi historis" />
                         <SourceBlock name="IQAir" desc="Kualitas udara real-time" />
                         <SourceBlock name="GADM" desc="Batas wilayah administratif" />
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             </section>
 
             {/* CTA Penutup */}
-            <section className="bg-forest-dark">
-                <div className="mx-auto max-w-7xl px-6 py-14 text-center">
-                    <h2 className="font-heading text-2xl font-bold text-white">
+            <section className="relative overflow-hidden bg-forest-dark">
+                {/* Aksen dekoratif halus supaya tidak terasa flat, senada dengan warna fresh & risk di hero */}
+                <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-fresh/10 blur-3xl" />
+                <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-risk-tinggi/10 blur-3xl" />
+
+                <motion.div
+                    variants={staggerContainer(0.12)}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.4 }}
+                    className="relative mx-auto max-w-7xl px-6 py-14 text-center"
+                >
+                    <motion.h2 variants={fadeUp} className="font-heading text-2xl font-bold text-white">
                         Mulai Pantau Wilayahmu Sekarang
-                    </h2>
-                    <p className="mx-auto mt-2 max-w-md text-sm text-white/70">
+                    </motion.h2>
+                    <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-md text-sm text-white/70">
                         Data selalu terbuka untuk siapa saja — warga, peneliti, hingga pengambil kebijakan.
-                    </p>
-                    <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                        <Button asChild size="lg" className="bg-white text-risk-tinggi hover:bg-white/90">
-                            <Link href={route('area-check')} className="inline-flex items-center gap-2">
-                                Cek Daerah Kamu
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
+                    </motion.p>
+                    <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                        <Button
+                            render={
+                                <Link href={route('area-check')} className="inline-flex items-center gap-2" />
+                            }
+                            nativeButton={false}
+                            size="lg"
+                            className="bg-white text-forest-dark hover:bg-white/90"
+                        >
+                            Cek Daerah Kamu
+                            <ArrowRight className="h-4 w-4" />
                         </Button>
                         <Button
-                            asChild
+                            render={<Link href={route('dashboard')} />}
+                            nativeButton={false}
                             size="lg"
                             variant="outline"
                             className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
                         >
-                            <Link href={route('dashboard')}>Buka Dashboard</Link>
+                            Buka Dashboard
                         </Button>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             </section>
         </AppLayout>
     );
@@ -391,9 +467,12 @@ function HowItWorksStep({ image, step, title, description, accent, number }) {
 
 function SourceBlock({ name, desc }) {
     return (
-        <div className="rounded-xl border border-black/5 p-5">
+        <motion.div
+            variants={fadeUp}
+            className="rounded-xl border border-black/5 p-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-sm hover:shadow-black/[0.03]"
+        >
             <p className="font-heading text-sm font-semibold text-forest-dark">{name}</p>
             <p className="mt-1 text-xs text-ink/50">{desc}</p>
-        </div>
+        </motion.div>
     );
 }

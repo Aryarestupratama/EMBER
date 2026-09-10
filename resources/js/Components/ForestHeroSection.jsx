@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { forwardRef, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 // File ada di public/assets/hero/, jadi diakses via path URL langsung
@@ -19,8 +19,26 @@ const forestFire = '/assets/hero/forest-fire.jpg';
  *       <div className="max-w-xl"> ...konten teks & tombol... </div>
  *   </ForestHeroSection>
  */
-export default function ForestHeroSection({ children, pinHeightVh = 200 }) {
+// forwardRef: parent (Landing.jsx) bisa pegang node wrapper luar yang sama
+// persis dipakai untuk useScroll di sini, supaya bisa bikin useScroll KEDUA
+// di Landing.jsx (target sama, offset sama) untuk animasi warna teks/tombol
+// yang selaras dengan transisi forest -> fire di background.
+const ForestHeroSection = forwardRef(function ForestHeroSection(
+    { children, pinHeightVh = 200 },
+    forwardedRef
+) {
     const containerRef = useRef(null);
+
+    // Gabungkan forwardedRef (dari parent) dengan containerRef internal,
+    // supaya keduanya menunjuk ke node DOM yang sama tanpa duplikasi ref.
+    const setRefs = (node) => {
+        containerRef.current = node;
+        if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+        } else if (forwardedRef) {
+            forwardedRef.current = node;
+        }
+    };
 
     // progress 0 -> 1 dihitung sepanjang TINGGI WRAPPER LUAR (yang sengaja
     // dibuat lebih tinggi dari 1 viewport), bukan sepanjang tinggi konten
@@ -50,7 +68,7 @@ export default function ForestHeroSection({ children, pinHeightVh = 200 }) {
     const fireClipPath = useTransform(fireInsetTop, (v) => `inset(${v}% 0% 0% 0%)`);
 
     return (
-        <div ref={containerRef} className="relative" style={{ height: `${pinHeightVh}vh` }}>
+        <div ref={setRefs} className="relative" style={{ height: `${pinHeightVh}vh` }}>
             <div className="sticky top-0 h-screen overflow-hidden border-b border-black/5">
                 {/* Layer dasar: hutan normal, selalu terlihat */}
                 <img
@@ -83,4 +101,6 @@ export default function ForestHeroSection({ children, pinHeightVh = 200 }) {
             </div>
         </div>
     );
-}
+});
+
+export default ForestHeroSection;

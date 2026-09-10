@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Domains\FireMonitoring\Models\AreaCheckCache;
 use App\Domains\FireMonitoring\Models\FireHotspot;
 use App\Domains\FireMonitoring\Services\GfwService;
+use App\Domains\FireMonitoring\Services\GoogleMapsLinkService;
 use App\Domains\FireMonitoring\Services\IqairService;
 use App\Domains\FireMonitoring\Services\MitigationHelper;
 use App\Http\Requests\AreaCheckRequest;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AreaCheckController extends Controller
@@ -15,6 +17,23 @@ class AreaCheckController extends Controller
     public function index()
     {
         return Inertia::render('AreaCheck');
+    }
+
+    public function resolveMapsLink(Request $request, GoogleMapsLinkService $mapsService)
+    {
+        $request->validate([
+            'url' => ['required', 'string'],
+        ]);
+
+        $coords = $mapsService->extractCoordinates($request->input('url'));
+
+        if (!$coords) {
+            return response()->json([
+                'message' => 'Tidak dapat membaca koordinat dari link tersebut. Pastikan link berasal dari Google Maps dan mengandung lokasi spesifik.',
+            ], 422);
+        }
+
+        return response()->json($coords);
     }
 
     public function check(AreaCheckRequest $request, GfwService $gfw, IqairService $iqair)

@@ -33,12 +33,21 @@ export default function AppLayout({
 }) {
     // Navbar sekarang selalu `fixed`, jadi tidak pernah reserve ruang sendiri
     // di layout. Untuk halaman non-transparent (variant solid), kita perlu
-    // kompensasi manual via padding-top setinggi navbar (kira-kira 72px),
-    // supaya konten <main> tidak ketutupan. Landing (transparentNav) sengaja
-    // TIDAK diberi padding ini, karena hero-nya memang didesain mulai dari
-    // y=0, di belakang navbar yang transparan.
+    // kompensasi manual via padding-top setinggi navbar (~72px), supaya
+    // konten <main> tidak ketutupan. Landing (transparentNav) sengaja TIDAK
+    // diberi padding ini, karena hero-nya memang didesain mulai dari y=0, di
+    // belakang navbar yang transparan.
+    //
+    // PENTING: pt-[..] di sini dan py-8 di mainClassName default SAMA-SAMA
+    // menyetel padding-top — bukan "menumpuk" seperti kelihatannya dari
+    // gabungan class-nya. Utility longhand (pt-*) menang atas shorthand
+    // (py-*) di stylesheet Tailwind, jadi py-8 milik mainClassName efektif
+    // KEKALAHAN total di sisi atas; hasil akhirnya cuma persis 72px, tanpa
+    // jarak napas tambahan — makanya judul halaman kerasa mepet ke navbar.
+    // Nilainya sengaja dibulatkan ke atas (96px = tinggi navbar + ~24px
+    // buffer) supaya tetap ada spacing, bukan cuma exact-fit.
     const resolvedMainClassName =
-        mainClassName && !transparentNav ? `pt-[72px] ${mainClassName}` : mainClassName;
+        mainClassName && !transparentNav ? `pt-24 ${mainClassName}` : mainClassName;
 
     return (
         <>

@@ -20,8 +20,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 Route::get('/area-check', [AreaCheckController::class, 'index'])->name('area-check');
 Route::post('/area-check', [AreaCheckController::class, 'check'])
-    ->middleware('throttle:20,1') // rate limit 20 request/menit per IP (Architecture.md §7)
+    ->middleware('throttle:20,1')
     ->name('area-check.submit');
+
+Route::post('/area-check/resolve-maps-link', [AreaCheckController::class, 'resolveMapsLink'])
+    ->middleware('throttle:20,1')
+    ->name('area-check.resolve-maps-link');
 
 Route::get('/area/{region:slug}', [RegionDetailController::class, 'show'])->name('region.detail');
 
