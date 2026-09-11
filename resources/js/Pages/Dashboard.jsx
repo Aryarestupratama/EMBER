@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import AppLayout from '@/Layouts/AppLayout';
 import MapView from '@/components/MapView';
 import StatTile from '@/components/StatTile';
 import RegionRankingList from '@/components/RegionRankingList';
+import CompareTrigger from '@/components/CompareTrigger';
+import CompareModal from '@/components/CompareModal';
 import SourceCredit from '@/components/SourceCredit';
 import { Badge } from '@/components/ui/badge';
 import { Flame, TreePine } from 'lucide-react';
@@ -36,6 +39,30 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
               minute: '2-digit',
           }) + ' WIB'
         : 'Belum ada data';
+
+    // --- Compare mode state ---
+    // selectedIds menyimpan region_id (bukan objek penuh) supaya gampang
+    // dicocokkan balik ke topRegions untuk render checkbox/badge, dan
+    // dikirim apa adanya sebagai query param ke endpoint compare.
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [compareOpen, setCompareOpen] = useState(false);
+
+    const toggleSelect = (regionId) => {
+        setSelectedIds((prev) =>
+            prev.includes(regionId)
+                ? prev.filter((id) => id !== regionId)
+                // .slice(0, 3): batas maksimum 3 wilayah dibandingkan sekaligus,
+                // selaras validasi 'max:3' di RegionCompareController.
+                : [...prev, regionId].slice(0, 3)
+        );
+    };
+
+    // Dipetakan balik dari topRegions (bukan state terpisah) supaya nama/provinsi
+    // yang ditampilkan di CompareTrigger selalu sinkron dengan data ranking
+    // yang sedang tampil, tanpa perlu request tambahan hanya untuk label chip.
+    const selectedRegions = topRegions
+        .filter((item) => selectedIds.includes(item.region.id))
+        .map((item) => item.region);
 
     return (
         <AppLayout title="Dashboard" active="dashboard">
@@ -129,8 +156,20 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                         </div>
                     </motion.div>
 
-                    <motion.div variants={fadeUp}>
-                        <RegionRankingList regions={topRegions} />
+                    {/* relative: supaya CompareTrigger (sticky bottom-4) menempel di
+                        bawah kolom ranking ini, bukan bawah viewport keseluruhan. */}
+                    <motion.div variants={fadeUp} className="relative">
+                        <RegionRankingList
+                            regions={topRegions}
+                            selected={selectedIds}
+                            onToggleSelect={toggleSelect}
+                            onClearSelection={() => setSelectedIds([])}
+                        />
+                        <CompareTrigger
+                            selectedRegions={selectedRegions}
+                            onRemove={toggleSelect}
+                            onCompare={() => setCompareOpen(true)}
+                        />
                     </motion.div>
                 </div>
 
@@ -138,6 +177,12 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                     <SourceCredit className="mt-6" />
                 </motion.div>
             </motion.div>
+
+            <CompareModal
+                open={compareOpen}
+                onOpenChange={setCompareOpen}
+                regionIds={selectedIds}
+            />
         </AppLayout>
     );
 }

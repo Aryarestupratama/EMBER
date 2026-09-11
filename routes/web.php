@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegionDetailController;
+use App\Http\Controllers\RegionCompareController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,6 +29,9 @@ Route::post('/area-check/resolve-maps-link', [AreaCheckController::class, 'resol
     ->name('area-check.resolve-maps-link');
 
 Route::get('/area/{region:slug}', [RegionDetailController::class, 'show'])->name('region.detail');
+
+Route::get('/api/regions/compare', [RegionCompareController::class, 'compare'])
+    ->name('region.compare');
 
 Route::get('/about', fn () => Inertia::render('About'))->name('about');
 
