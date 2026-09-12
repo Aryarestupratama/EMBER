@@ -1,16 +1,41 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Circle, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import RiskBadge from '@/components/RiskBadge';
+import HotspotPopup from '@/components/HotspotPopup';
+
+// Dibaca dari CSS custom property (--color-risk-*, --color-forest-dark) yang
+// sudah didefinisikan di app.css — bukan ditulis ulang di sini. Ini konteks
+// Leaflet (attribute SVG/canvas & <img> divIcon), yang TIDAK bisa resolve
+// var(--x) langsung seperti CSS biasa, jadi nilainya perlu di-resolve sekali
+// ke string hex/rgb lewat getComputedStyle, lalu dipakai sebagai string biasa.
+function cssVar(name, fallback) {
+    if (typeof window === 'undefined') return fallback;
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+}
 
 const RISK_COLOR = {
-    rendah: '#40916C',
-    sedang: '#FFD60A',
-    tinggi: '#E85D04',
-    sangat_tinggi: '#D00000',
-    na: '#ADB5BD',
+    rendah: cssVar('--color-risk-rendah', '#40916C'),
+    sedang: cssVar('--color-risk-sedang', '#FFD60A'),
+    tinggi: cssVar('--color-risk-tinggi', '#E85D04'),
+    sangat_tinggi: cssVar('--color-risk-sangat-tinggi', '#D00000'),
+    na: cssVar('--color-risk-na', '#ADB5BD'),
 };
+
+const FOREST_DARK_COLOR = cssVar('--color-forest-dark', '#1B4332');
+
+// Titik tengah kasar wilayah Indonesia (kira-kira di antara Kalimantan Tengah
+// dan Sulawesi) — dipakai sebagai view AWAL peta (mode nasional, zoom 5)
+// sebelum FlyToLocation (di bawah) membawa peta terbang ke titik target
+// (RegionDetail / AreaCheck).
+const INDONESIA_CENTER = [-2.5, 118];
+
+// Level zoom saat sebuah titik hotspot diklik di peta — dibuat cukup dekat
+// (14) supaya user langsung dapat konteks area sekitar titik, lebih dekat
+// dari zoom target RegionDetail/AreaCheck (11/13) karena di sini fokusnya
+// satu titik spesifik, bukan satu wilayah/radius pengecekan.
+const HOTSPOT_CLICK_ZOOM = 14;
 
 // Kategori yang dapat ikon: rendah -> pohon, selain itu (kuning s/d merah) -> api.
 // 'na' (abu-abu, tidak ada data/klasifikasi) sengaja TIDAK dipaksa jadi salah
@@ -73,26 +98,24 @@ const HOTSPOT_ICONS = {
     sangat_tinggi: buildHotspotIcon('sangat_tinggi'),
 };
 
-function HotspotPopup({ hotspot }) {
-    return (
-        <Popup>
-            <div className="space-y-1.5 text-sm">
-                <RiskBadge category={hotspot.gfw_risk_category} />
-                <p className="text-ink/70">
-                    Confidence: {hotspot.confidence}% · FRP: {hotspot.frp}
-                </p>
-            </div>
-        </Popup>
-    );
-}
 
-const INDONESIA_CENTER = [-2.5, 118];
-
-const selectedIcon = new L.Icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+// Pin "lokasi kamu" — bentuk teardrop bertema forest-dark (bukan marker biru
+// default Leaflet), supaya tetap satu bahasa visual dengan ikon hotspot di
+// atas (lingkaran putih + stroke berwarna), alih-alih memasukkan warna asing
+// ke tengah peta yang seluruhnya sudah dipetakan ke palet EMBER.
+const selectedIcon = L.divIcon({
+    className: '',
+    html: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="42" viewBox="0 0 30 42"
+             style="filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));">
+            <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.7 23.3 0 15 0Z"
+                  fill="${FOREST_DARK_COLOR}" />
+            <circle cx="15" cy="15" r="5.5" fill="#fff" />
+        </svg>
+    `,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -38],
 });
 
 function ClickHandler({ onMapClick }) {
@@ -142,9 +165,16 @@ export default function MapView({
     const target = zoomTo ?? selectedLocation;
     const targetZoom = zoomTo ? 11 : 13;
 
+    // Dipegang lewat ref (bukan state) karena instance L.Map ini cuma dipakai
+    // secara imperatif (map.flyTo saat klik marker) — tidak pernah dibaca
+    // untuk keperluan render, jadi tidak perlu (dan tidak boleh, supaya tidak
+    // trigger re-render sia-sia) taruh di state.
+    const mapRef = useRef(null);
+
     return (
         <div className="h-full w-full overflow-hidden rounded-xl">
             <MapContainer
+                ref={mapRef}
                 center={INDONESIA_CENTER}
                 zoom={5}
                 scrollWheelZoom={true}
@@ -163,10 +193,23 @@ export default function MapView({
                     const position = [parseFloat(hotspot.latitude), parseFloat(hotspot.longitude)];
                     const icon = HOTSPOT_ICONS[hotspot.gfw_risk_category];
 
+                    // Klik marker/titik hotspot -> selain Leaflet otomatis buka
+                    // Popup-nya, kita juga secara eksplisit flyTo ke koordinat
+                    // titik itu supaya user langsung "masuk" ke lokasinya,
+                    // bukan cuma lihat popup dari zoom level yang sedang aktif.
+                    const eventHandlers = {
+                        click: () => {
+                            mapRef.current?.flyTo(position, HOTSPOT_CLICK_ZOOM, {
+                                duration: 1.2,
+                                easeLinearity: 0.25,
+                            });
+                        },
+                    };
+
                     // Ada ikon (kategori dikenali) -> pakai Marker api/pohon.
                     // Tidak ada (na / kategori tak dikenal) -> titik polos abu-abu, apa adanya.
                     return icon ? (
-                        <Marker key={hotspot.id} position={position} icon={icon}>
+                        <Marker key={hotspot.id} position={position} icon={icon} eventHandlers={eventHandlers}>
                             <HotspotPopup hotspot={hotspot} />
                         </Marker>
                     ) : (
@@ -180,6 +223,7 @@ export default function MapView({
                                 fillOpacity: 0.7,
                                 weight: 1.5,
                             }}
+                            eventHandlers={eventHandlers}
                         >
                             <HotspotPopup hotspot={hotspot} />
                         </CircleMarker>
@@ -193,7 +237,7 @@ export default function MapView({
                             <Circle
                                 center={selectedLocation}
                                 radius={checkRadiusKm * 1000}
-                                pathOptions={{ color: '#2D6A4F', fillOpacity: 0.05, weight: 1 }}
+                                pathOptions={{ color: cssVar('--color-forest', '#2D6A4F'), fillOpacity: 0.05, weight: 1 }}
                             />
                         )}
                     </>

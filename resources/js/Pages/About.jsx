@@ -67,20 +67,17 @@ const DATA_SOURCES = [
     },
 ];
 
-// TODO: ganti seluruh placeholder di bawah ini dengan data tim sebenarnya
-// (nama, NIM/peran) sebelum submission. Urutan anggota bebas, tidak harus
-// mencerminkan hierarki tertentu.
 const SUPERVISOR = {
-    name: 'Nama Dosen Pembimbing',
+    name: 'Siti Maesaroh, S.Kom., M.T.I.',
     title: 'Dosen Pembimbing',
-    affiliation: 'Universitas Negeri Surabaya (UNESA)',
+    affiliation: 'Universitas Mercu Buana',
 };
 
 const TEAM_MEMBERS = [
-    { name: 'Nama Anggota 1', role: 'Peran/NIM' },
-    { name: 'Nama Anggota 2', role: 'Peran/NIM' },
-    { name: 'Nama Anggota 3', role: 'Peran/NIM' },
-    { name: 'Nama Anggota 4', role: 'Peran/NIM' },
+    { name: 'Arya Restu Pratama', role: '[Peran]' },
+    { name: 'Justin Dwinata', role: '[Peran]' },
+    { name: 'Mutia Bela Puspita', role: '[Peran]' },
+    { name: 'Azka Niaji Rangkuti', role: '[Peran]' },
 ];
 
 const THRESHOLDS = [

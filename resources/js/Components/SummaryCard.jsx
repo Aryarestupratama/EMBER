@@ -15,6 +15,21 @@ const AQI_CATEGORY_LABELS = {
     berbahaya: 'Berbahaya',
 };
 
+// Warna headline mengikuti keparahan kategori — sebelumnya "AQI {angka}"
+// selalu text-forest-dark (hijau) tak peduli kategorinya, yang menyesatkan
+// kalau kategorinya "Tidak Sehat"/"Berbahaya" (hijau menyiratkan aman).
+// Kategori & urutan keparahan di sini murni label warna, BUKAN threshold —
+// ambang batas numeriknya tetap satu sumber kebenaran di backend
+// (MitigationHelper/config/ember.php, lihat komentar di atas), sama seperti
+// AQI_CATEGORY_LABELS.
+const AQI_CATEGORY_TONE = {
+    baik: 'text-forest-dark',
+    sedang: 'text-amber-700',
+    tidak_sehat: 'text-risk-tinggi',
+    sangat_tidak_sehat: 'text-risk-sangat-tinggi',
+    berbahaya: 'text-risk-sangat-tinggi',
+};
+
 // Baris section dengan icon dalam chip warna — pola yang sama dengan
 // GuidanceColumn di RegionDetail.jsx (icon + label rata tengah vertikal),
 // supaya "rasa" komponennya konsisten di seluruh aplikasi, bukan cuma
@@ -117,7 +132,7 @@ export default function SummaryCard({ result }) {
 
                 <SectionRow
                     icon={Lightbulb}
-                    iconClass="text-amber-600"
+                    iconClass="text-amber-700"
                     bgClass="bg-amber-500/10"
                     label="Rekomendasi"
                 >

@@ -25,6 +25,19 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
     visible: { transition: { staggerChildren, delayChildren } },
 });
 
+// Penerjemah angka AQI mentah → kategori teks + tone warna, dipakai sebagai
+// `headline` StatTile "Kualitas Udara Terburuk". Kategori & ambang batas
+// mengikuti skala AQI US EPA yang sudah dipakai konsisten di Rules.md/Design.md
+// (bukan threshold baru) — cuma dipetakan jadi label Indonesia + tone di sini,
+// bukan logic skoring baru.
+function aqiToHeadline(aqi) {
+    if (aqi == null) return null; // biar StatTile pakai jalur isEmpty bawaannya
+    if (aqi <= 50) return { headline: 'Baik', tone: 'success' };
+    if (aqi <= 100) return { headline: 'Sedang', tone: 'neutral' };
+    if (aqi <= 150) return { headline: 'Tidak Sehat (Sensitif)', tone: 'warning' };
+    return { headline: 'Tidak Sehat', tone: 'danger' };
+}
+
 export default function Dashboard({ hotspots, stats, topRegions }) {
     // PENTING: config('app.timezone') backend masih 'UTC', jadi
     // stats.last_updated adalah waktu UTC. Konversi ke Asia/Jakarta
@@ -64,6 +77,12 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
         .filter((item) => selectedIds.includes(item.region.id))
         .map((item) => item.region);
 
+    // Dihitung sekali di sini (bukan inline di JSX) supaya gampang dites
+    // terpisah nanti kalau ambang batasnya berubah, dan supaya JSX StatTile
+    // di bawah tidak numpuk logic percabangan.
+    const worstAqi = stats.worst_aqi?.nearest_city_aqi ?? null;
+    const aqiStatus = aqiToHeadline(worstAqi);
+
     return (
         <AppLayout title="Dashboard" active="dashboard">
             <motion.div variants={staggerContainer(0.12)} initial="hidden" animate="visible" className="relative">
@@ -98,33 +117,54 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                 >
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="Total Hotspot Hari Ini"
+                            label="Titik Panas Hari Ini"
+                            headline={
+                                stats.total_hotspots > 0
+                                    ? `${stats.total_hotspots.toLocaleString('id-ID')} titik terdeteksi`
+                                    : 'Tidak ada titik terdeteksi'
+                            }
                             value={stats.total_hotspots}
-                            tooltip="Jumlah titik panas dari NASA FIRMS pada tanggal data terakhir yang berhasil di-ingest, bukan selalu tanggal hari ini jika proses pembaruan sempat tertunda."
+                            tone={stats.total_hotspots > 0 ? 'warning' : 'success'}
+                            showValue={false}
+                            tooltip="Titik panas dari NASA FIRMS pada data terakhir yang berhasil di-ingest, bukan selalu hari ini jika pembaruan sempat tertunda."
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
                         <StatTile
                             label="Wilayah Risiko Tinggi"
+                            headline={
+                                stats.high_risk_regions > 0
+                                    ? `${stats.high_risk_regions} wilayah perlu perhatian`
+                                    : 'Tidak ada wilayah berisiko tinggi'
+                            }
                             value={stats.high_risk_regions}
-                            accent={stats.high_risk_regions > 0}
-                            tooltip="Jumlah kabupaten/kota berkategori Priority Score 'Tinggi' atau 'Sangat Tinggi' — dihitung dari kombinasi risiko deforestasi historis (GFW), frekuensi hotspot, dan dampak AQI."
+                            sublabel={`dari ${stats.total_regions} dipantau`}
+                            tone={stats.high_risk_regions > 0 ? 'danger' : 'success'}
+                            showValue={false}
+                            tooltip="Kabupaten/kota berkategori Priority Score 'Tinggi' atau 'Sangat Tinggi' — kombinasi risiko deforestasi historis (GFW), frekuensi hotspot, dan dampak AQI."
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="AQI Terburuk"
-                            value={stats.worst_aqi?.nearest_city_aqi ?? null}
+                            label="Kualitas Udara Terburuk"
+                            headline={aqiStatus?.headline}
+                            value={worstAqi}
                             sublabel={stats.worst_aqi?.nearest_city_name}
-                            tooltip="Nilai AQI (skala AQI US EPA) tertinggi dari kota terdekat hotspot berkategori Tinggi/Sangat Tinggi pada data terkini."
+                            tone={aqiStatus?.tone}
+                            tooltip="AQI (skala AQI US EPA) tertinggi dari kota terdekat hotspot berkategori Tinggi/Sangat Tinggi."
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
+                        {/* variant="muted": ini trust-signal (cakupan sistem), bukan
+                            alert — sengaja tidak ikut bersaing visual dengan 3 tile
+                            actionable di atas (lihat diskusi StatTile 11 Sep). */}
                         <StatTile
-                            label="Wilayah Terpantau"
+                            label="Cakupan Sistem"
+                            headline="Terpantau di seluruh Indonesia"
                             value={stats.total_regions}
                             sublabel="kabupaten/kota"
-                            tooltip="Total kabupaten/kota se-Indonesia yang datanya dipantau sistem EMBER. Daftar Wilayah Prioritas di samping menampilkan 10 wilayah dengan Priority Score tertinggi dari total ini."
+                            variant="muted"
+                            tooltip="Total kabupaten/kota se-Indonesia yang datanya dipantau EMBER. Daftar Wilayah Prioritas di samping menampilkan 10 wilayah dengan Priority Score tertinggi dari total ini."
                         />
                     </motion.div>
                 </motion.div>
@@ -133,7 +173,7 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <motion.div
                         variants={fadeUp}
-                        className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm lg:col-span-2"
+                        className="flex flex-col overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm lg:col-span-2"
                     >
                         <div className="flex items-center justify-between border-b border-black/5 px-5 py-3">
                             <h2 className="font-heading text-sm font-semibold text-ink">
@@ -151,7 +191,11 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                                 <LegendItem shape="na" label="N/A" />
                             </div>
                         </div>
-                        <div className="h-[560px]">
+                        {/* flex-1 + min-h: ngisi sisa tinggi card, ngikutin tinggi
+                            card ranking di sebelah (grid row stretch) — bukan fixed
+                            560px lagi, supaya nggak nyisa putih pas ranking lebih
+                            tinggi dari 560px (mis. 10 wilayah prioritas). */}
+                        <div className="min-h-[560px] flex-1">
                             <MapView hotspots={hotspots} mode="nasional" />
                         </div>
                     </motion.div>

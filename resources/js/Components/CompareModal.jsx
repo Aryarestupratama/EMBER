@@ -12,7 +12,15 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (!open || regionIds.length < 2) return;
+        // Reset data lama begitu seleksi tidak lagi valid (<2 wilayah) — tanpa
+        // ini, `data` dari fetch sebelumnya tetap nyangkut di state, dan blok
+        // render `!loading && !error` di bawah tetap nampilin hasil compare
+        // yang sudah tidak sesuai seleksi user saat ini (mis. user hapus 2
+        // dari 3 wilayah terpilih, tapi modal masih nampilin 3 kartu lama).
+        if (!open || regionIds.length < 2) {
+            setData([]);
+            return;
+        }
 
         setLoading(true);
         setError(null);
@@ -47,11 +55,21 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
                     <p className="py-8 text-center text-sm text-ink/50">Memuat data...</p>
                 )}
 
+                {/* text-risk-sangat-tinggi (merah), bukan text-risk-tinggi (oranye):
+                    ini pesan error aplikasi (gagal fetch), bukan indikator kategori
+                    risiko wilayah — dipakai warna alert paling tegas supaya maknanya
+                    tidak tertukar dengan badge kategori "Tinggi" di kartu sebelahnya. */}
                 {error && (
-                    <p className="py-8 text-center text-sm text-risk-tinggi">{error}</p>
+                    <p className="py-8 text-center text-sm text-risk-sangat-tinggi">{error}</p>
                 )}
 
-                {!loading && !error && (
+                {!loading && !error && regionIds.length < 2 && (
+                    <p className="py-8 text-center text-sm text-ink/50">
+                        Pilih minimal 2 wilayah untuk dibandingkan.
+                    </p>
+                )}
+
+                {!loading && !error && regionIds.length >= 2 && (
                     // grid-cols-1 di mobile (kartu ditumpuk vertikal, bukan diperas
                     // jadi 2-3 kolom sempit) — baru pindah ke multi-kolom di md ke atas.
                     <div className={`grid grid-cols-1 gap-4 ${data.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>

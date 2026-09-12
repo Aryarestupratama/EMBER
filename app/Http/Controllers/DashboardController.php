@@ -17,7 +17,13 @@ class DashboardController extends Controller
 
         $hotspots = $latestHotspotDate
             ? FireHotspot::whereDate('acq_date', $latestHotspotDate)
-                ->select(['id', 'latitude', 'longitude', 'gfw_risk_category', 'confidence', 'frp'])
+                ->select(['id', 'latitude', 'longitude', 'acq_date', 'gfw_risk_category', 'confidence', 'frp', 'region_id'])
+                // region:id,name — cuma ambil kolom yang dipakai frontend (nama wilayah),
+                // bukan seluruh baris Region, biar payload ke Dashboard tetap ringan
+                // walau hotspot-nya banyak. region_id BISA null (proses assign di
+                // ingest bisa gagal/lewat untuk sebagian baris, lihat data live),
+                // jadi frontend tetap wajib fallback kalau relasinya kosong.
+                ->with('region:id,name')
                 ->get()
             : collect();
 

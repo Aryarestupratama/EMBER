@@ -5,24 +5,30 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    /* ----------------------------------------------------------------
+       Token semantik shadcn di-remap ke palet EMBER (Design.md §2).
+       Prinsipnya sama seperti --color-risk-*: hex sumber tunggal ada
+       di sini, komponen tetap pakai kelas Tailwind ter-generate
+       (bg-primary, bg-accent, dst) tanpa perlu diubah satu-satu.
+       ---------------------------------------------------------------- */
+    --background: #F8F9FA;
+    --foreground: #343A40;
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: #343A40;
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --popover-foreground: #343A40;
+    --primary: #2D6A4F;
+    --primary-foreground: #F8F9FA;
+    --secondary: #40916C;
+    --secondary-foreground: #F8F9FA;
+    --muted: #EEF2F0;
+    --muted-foreground: #5C6B63;
+    --accent: #E7F3EC;
+    --accent-foreground: #1B4332;
+    --destructive: #D00000;
+    --border: #DDE3DF;
+    --input: #DDE3DF;
+    --ring: #40916C;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -159,4 +165,23 @@
     .tabular-nums {
         font-variant-numeric: tabular-nums;
     }
+}
+
+/* ================================================================
+   Override chrome Leaflet popup (dipakai HotspotPopup di MapView.jsx).
+   Leaflet punya padding & font-family sendiri di .leaflet-popup-content
+   yang nilainya beda-beda antar versi — daripada dilawan pakai margin
+   negatif tebak-tebakan di komponen (rapuh, gampang meleset), padding
+   bawaannya dimatikan total di sini, lalu komponen yang atur spacing-nya
+   sendiri lewat class Tailwind biasa (p-4, dst). Efeknya juga lebih
+   presisi: gap kiri/kanan/atas/bawah dijamin sama rata.
+   ================================================================ */
+.leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: var(--radius-lg);
+}
+.leaflet-popup-content {
+    margin: 0;
+    width: auto !important;
+    font-family: var(--font-sans);
 }

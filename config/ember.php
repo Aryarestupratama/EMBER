@@ -72,8 +72,27 @@ return [
     | IQAir). Dikonsumsi lewat MitigationHelper, tidak pernah dihardcode
     | ulang di controller/frontend (Rules.md §7).
     |
-    | Sumber: BNPB (siaran pers resmi Agustus–September 2026) untuk fire_risk;
-    | skala AQI US EPA standar (sejalan dengan skala IQAir) untuk air_quality.
+    | Sumber (fire_risk) — diadaptasi/diparafrase dari pernyataan resmi BNPB
+    | soal karhutla Agustus-September 2026, dirujuk eksplisit per tautan
+    | (bukan klaim umum tanpa rujukan):
+    |   1. ANTARA News, "BNPB ajak masyarakat cegah karhutla, lapor jika
+    |      temukan titik api", 28 Agustus 2026.
+    |      https://www.antaranews.com/berita/5719161/bnpb-ajak-masyarakat-cegah-karhutla-lapor-jika-temukan-titik-api
+    |   2. ANTARA News, "BNPB imbau masyarakat segera lapor jika temukan
+    |      titik api karhutla", 21 Agustus 2026.
+    |      https://www.antaranews.com/berita/5706297/bnpb-imbau-masyarakat-segera-lapor-jika-temukan-titik-api-karhutla
+    |   3. BNPB.go.id, "Situasi Terkini Penanganan Karhutla Enam Provinsi
+    |      Prioritas", per 4 September 2026.
+    |      https://www.bnpb.go.id/berita/situasi-terkini-penanganan-karhutla-enam-provinsi-prioritas
+    |   4. BNPB.go.id, "Berdialog dengan Warga, BNPB Mengimbau Jangan
+    |      Bakar Lahan", 7 Agustus 2026.
+    |      https://www.bnpb.go.id/berita/berdialog-dengan-warga-bnpb-mengimbau-jangan-bakar-lahan
+    | Nomor layanan darurat 117 dikonfirmasi sebagai call center resmi BNPB
+    | di seluruh rujukan di atas.
+    |
+    | Skala AQI US EPA standar (sejalan dengan skala IQAir) untuk air_quality
+    | — bukan kutipan sumber tunggal, merupakan skala baku internasional.
+    |
     | short_text  → dipakai di SummaryCard (ringkas, 1 kalimat)
     | full_guidance → dipakai di halaman detail lokasi/wilayah & /about
     */
@@ -84,7 +103,9 @@ return [
             'rendah' => [
                 'short_text' => 'Wilayah relatif aman. Tetap hindari membakar sampah atau lahan sembarangan.',
                 'full_guidance' => [
-                    'Tidak melakukan hal-hal yang berpotensi menimbulkan kebakaran, termasuk membakar sampah sembarangan.',
+                    // Diparafrase (bukan kutipan langsung) dari imbauan Plt Kapusdatin
+                    // BNPB Berton SP Panjaitan — lihat rujukan #1 di atas.
+                    'Hindari aktivitas yang berisiko memicu titik api, termasuk kebiasaan membakar sampah di area terbuka.',
                     'Pantau informasi resmi BNPB/BPBD setempat secara berkala.',
                     'Laporkan ke BPBD atau layanan darurat BNPB (117) bila menemukan titik api atau asap mencurigakan.',
                 ],

@@ -58,10 +58,22 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
 
             {/* Panduan singkat, cuma tampil begitu mode compare aktif — bukan
                 noise yang harus dilihat user tiap buka dashboard, tapi hadir
-                tepat saat dibutuhkan (persis setelah klik "Bandingkan Wilayah"). */}
+                tepat saat dibutuhkan (persis setelah klik "Bandingkan Wilayah").
+                Pesannya berubah begitu limit 3 tercapai — supaya "kenapa
+                checkbox ini mati?" langsung terjawab di sini, bukan cuma
+                ditebak dari checkbox yang disabled tanpa keterangan. */}
             {compareMode && (
                 <div className="border-b border-black/5 bg-forest-dark/5 px-4 py-2 text-xs text-forest-dark">
-                    Pilih 2–3 wilayah di bawah, lalu klik <span className="font-medium">Bandingkan</span> yang muncul.
+                    {selected.length >= 3 ? (
+                        <>
+                            Maksimum <span className="font-medium">3 wilayah</span> sekaligus. Hapus satu
+                            untuk memilih yang lain, atau klik <span className="font-medium">Bandingkan</span>.
+                        </>
+                    ) : (
+                        <>
+                            Pilih 2–3 wilayah di bawah, lalu klik <span className="font-medium">Bandingkan</span> yang muncul.
+                        </>
+                    )}
                 </div>
             )}
 
@@ -81,18 +93,25 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                     return (
                         <div
                             key={item.id}
-                            className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-canvas"
+                            className={`flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-canvas ${
+                                disableUnselected ? 'opacity-40' : ''
+                            }`}
                         >
                             <div className="flex items-center gap-3">
                                 {/* Checkbox cuma dirender saat compareMode aktif — sebelum
                                     itu list-nya polos/bersih, tidak ada elemen interaktif
-                                    ekstra yang bikin bingung "checkbox ini buat apa". */}
+                                    ekstra yang bikin bingung "checkbox ini buat apa".
+                                    title: alasan kenapa mati muncul di tooltip native saat
+                                    hover, melengkapi opacity baris & pesan panduan di atas —
+                                    3 sinyal berbeda (visual redup, tooltip, teks panduan)
+                                    supaya "kenapa gak bisa diklik" gak cuma bisa ditebak. */}
                                 {onToggleSelect && compareMode && (
                                     <Checkbox
                                         checked={isSelected}
                                         disabled={disableUnselected}
                                         onCheckedChange={() => onToggleSelect(item.region.id)}
                                         aria-label={`Pilih ${item.region.name} untuk dibandingkan`}
+                                        title={disableUnselected ? 'Maksimum 3 wilayah sekaligus' : undefined}
                                     />
                                 )}
                                 <span className="tabular-nums w-5 text-sm font-medium text-ink/30">
