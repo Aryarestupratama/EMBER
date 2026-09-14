@@ -7,8 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, LocateFixed, Loader2, Link2, TreePine, Flame } from 'lucide-react';
 
-// Sama persis pola di Dashboard.jsx/RegionDetail.jsx — animate langsung
-// jalan pas halaman dimuat (bukan whileInView), karena ini halaman kerja.
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
@@ -19,9 +17,6 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
     visible: { transition: { staggerChildren, delayChildren } },
 });
 
-// Tahapan pesan loading — dicocokkan dengan urutan nyata proses backend
-// (AreaCheckController::check → GfwService → IqairService), bukan teks
-// generik, supaya user paham ada beberapa sumber data yang sedang diproses.
 const LOADING_STAGES = [
     'Mengecek titik panas terdekat...',
     'Menghitung risiko deforestasi (GFW)...',
@@ -41,9 +36,7 @@ function MorphingLoadingIcon() {
     }, []);
 
     return (
-        <div className="relative flex h-16 w-16 items-center justify-center">
-            {/* Ring berdenyut di belakang ikon — warnanya ikut berubah
-                senada dengan ikon aktif (hijau untuk pohon, oranye api). */}
+        <div className="relative flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
             <motion.span
                 key={`ring-${isTree}`}
                 className={`absolute inset-0 rounded-full ${
@@ -63,9 +56,9 @@ function MorphingLoadingIcon() {
                     className="relative"
                 >
                     {isTree ? (
-                        <TreePine className="h-8 w-8 text-forest" strokeWidth={2.2} />
+                        <TreePine className="h-7 w-7 text-forest sm:h-8 sm:w-8" strokeWidth={2.2} />
                     ) : (
-                        <Flame className="h-8 w-8 text-risk-tinggi" strokeWidth={2.2} />
+                        <Flame className="h-7 w-7 text-risk-tinggi sm:h-8 sm:w-8" strokeWidth={2.2} />
                     )}
                 </motion.div>
             </AnimatePresence>
@@ -85,7 +78,7 @@ function LoadingCard() {
 
     return (
         <Card className="border-black/5 shadow-sm">
-            <CardContent className="flex flex-col items-center gap-4 py-14 text-center">
+            <CardContent className="flex flex-col items-center gap-4 py-10 text-center sm:py-14">
                 <MorphingLoadingIcon />
                 <AnimatePresence mode="wait">
                     <motion.p
@@ -187,12 +180,11 @@ export default function AreaCheck() {
                 animate="visible"
                 className="relative"
             >
-                {/* Aksen dekoratif halus, konsisten dengan Dashboard.jsx/RegionDetail.jsx */}
                 <div className="pointer-events-none absolute -top-10 right-0 -z-10 h-72 w-72 rounded-full bg-forest-dark/[0.04] blur-3xl" />
                 <div className="pointer-events-none absolute top-72 -left-16 -z-10 h-64 w-64 rounded-full bg-fresh/[0.05] blur-3xl" />
 
                 <motion.div variants={fadeUp} className="mb-6">
-                    <h1 className="font-heading text-2xl font-bold text-ink">Cek Daerah Kamu</h1>
+                    <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">Cek Daerah Kamu</h1>
                     <p className="mt-1 text-sm text-ink/60">
                         Klik lokasi di peta, gunakan lokasi kamu saat ini, atau tempel link Google
                         Maps untuk melihat status risiko karhutla, kualitas udara, dan hotspot
@@ -204,7 +196,7 @@ export default function AreaCheck() {
                     variants={fadeUp}
                     className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <Button
                             onClick={handleGeolocate}
                             disabled={checking}
@@ -217,7 +209,7 @@ export default function AreaCheck() {
                             )}
                             Gunakan Lokasi Saya
                         </Button>
-                        <p className="hidden items-center gap-1.5 text-sm text-ink/50 sm:flex">
+                        <p className="hidden items-center gap-1.5 text-sm text-ink/50 md:flex">
                             <MapPin className="h-4 w-4" />
                             atau klik langsung di peta
                         </p>
@@ -263,10 +255,10 @@ export default function AreaCheck() {
                     )}
                 </AnimatePresence>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <motion.div
                         variants={fadeUp}
-                        className="h-[560px] overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm lg:col-span-2"
+                        className="h-[320px] overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm sm:h-[420px] md:col-span-2 md:h-[480px] lg:h-[560px] lg:col-span-2"
                     >
                         <MapView
                             selectable
@@ -276,7 +268,7 @@ export default function AreaCheck() {
                         />
                     </motion.div>
 
-                    <motion.div variants={fadeUp}>
+                    <motion.div variants={fadeUp} className="md:col-span-2 lg:col-span-1">
                         <AnimatePresence mode="wait">
                             {checking && (
                                 <motion.div

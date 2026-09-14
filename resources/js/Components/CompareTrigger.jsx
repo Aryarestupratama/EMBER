@@ -31,17 +31,10 @@ export default function CompareTrigger({ selectedRegions, onRemove, onCompare })
                             </span>
                         ))}
                     </div>
-                    {/* tabular-nums: "2/3" & "3/3" harus rata lebar sama, biar teks
-                        di sebelah tombol nggak geser posisi tiap jumlah berubah. */}
                     <div className="flex shrink-0 items-center gap-2.5">
                         <span className="hidden tabular-nums text-xs text-ink/40 sm:inline">
                             {selectedRegions.length}/3 dipilih
                         </span>
-                        {/* bg-forest: sebelumnya Button pakai varian default (abu-abu
-                            netral) — padahal ini CTA utama dari seluruh alur compare,
-                            jadi disamakan warnanya dengan brand primary (Design.md §2)
-                            supaya jelas ini aksi yang harus diklik, bukan sekadar
-                            salah satu tombol di antara banyak elemen lain di bar ini. */}
                         <Button
                             size="sm"
                             onClick={onCompare}

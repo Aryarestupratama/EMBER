@@ -17,9 +17,7 @@ class GfwService
     }
 
     /**
-     * Ambil skor risiko untuk satu titik koordinat.
-     * Cek cache database dulu (TTL 30 hari) sebelum panggil API GFW,
-     * sesuai prinsip cache-first (Architecture.md #1).
+     * Cache-first: cek cache DB (TTL 30 hari) sebelum panggil API GFW.
      */
     public function getRiskScore(float $lat, float $lon): array
     {
@@ -46,12 +44,8 @@ class GfwService
     }
 
     /**
-     * Ambil skor risiko untuk BANYAK titik sekaligus.
-     * Tetap dicek cache satu-satu (per titik), hanya titik yang
-     * belum ada cache valid yang benar-benar panggil API GFW.
-     *
      * @param array<int, array{lat: float, lon: float}> $points
-     * @return array<int, array> Hasil berurutan sesuai index $points
+     * @return array<int, array>
      */
     public function getRiskScoresForPoints(array $points): array
     {
@@ -151,10 +145,8 @@ class GfwService
     }
 
     /**
-     * Normalisasi loss_percentage ke skala 0-1.
-     * Skala maksimum ditentukan dari sampel 20 titik hotspot asli
-     * (min 0.63%, max 33.88%, rata-rata 18.22%, median 21.09%).
-     * Lihat Progress.md untuk log pengujian lengkap.
+     * Skala max ditentukan dari sampel 20 titik hotspot asli
+     * (min 0.63%, max 33.88%). Lihat Progress.md.
      */
     protected function normalizeScore(float $lossPercentage): float
     {
@@ -163,8 +155,7 @@ class GfwService
     }
 
     /**
-     * Kategorikan skor 0-1 menggunakan threshold di config/ember.php.
-     * NoData / null SELALU dikategorikan 'na', bukan dianggap 0.
+     * NoData / null SELALU 'na', tidak pernah dianggap 0.
      */
     public function categorizeScore(?float $score): string
     {

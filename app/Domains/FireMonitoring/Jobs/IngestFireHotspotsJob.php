@@ -22,8 +22,7 @@ class IngestFireHotspotsJob implements ShouldQueue
     protected \Illuminate\Support\Collection $regionsCache;
 
     /**
-     * @param int|null $limit Batasi jumlah hotspot diproses (untuk testing).
-     *                        Null = proses semua (mode production).
+     * @param int|null $limit Batasi jumlah hotspot diproses (untuk testing). Null = semua.
      */
     public function __construct(protected ?int $limit = null)
     {
@@ -64,7 +63,6 @@ class IngestFireHotspotsJob implements ShouldQueue
                 $hotspots = array_slice($hotspots, 0, $this->limit);
             }
 
-            // Ambil semua region SEKALI di luar loop (bukan query berulang per hotspot)
             $this->regionsCache = Region::all(['id', 'centroid_lat', 'centroid_lon']);
 
             $hasFailures = false;
@@ -158,13 +156,9 @@ class IngestFireHotspotsJob implements ShouldQueue
     }
 
     /**
-     * Cari region terdekat dari titik koordinat menggunakan formula Haversine
-     * terhadap centroid tiap region. Menggunakan cache in-memory ($this->regionsCache)
-     * agar tidak query database berulang kali per hotspot.
-     *
-     * Radius maksimum 100 km — kalau tidak ada region dalam radius ini,
-     * hotspot dibiarkan tanpa region (region_id null) daripada salah
-     * assign ke region yang jauh sekali (misal titik di tengah laut).
+     * Haversine terhadap centroid tiap region, pakai cache in-memory
+     * agar tidak query DB berulang per hotspot. Radius maksimum 100 km;
+     * di luar itu region_id dibiarkan null (mis. titik di tengah laut).
      */
     protected function findNearestRegion(float $lat, float $lon): ?int
     {

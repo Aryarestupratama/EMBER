@@ -14,8 +14,6 @@ import {
     Leaf,
 } from 'lucide-react';
 
-// Dipakai berulang supaya elemen anak (teks, kartu, dsb) muncul satu-satu
-// (staggered) alih-alih sekaligus bersamaan.
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
@@ -26,29 +24,11 @@ const staggerContainer = (staggerChildren = 0.15, delayChildren = 0) => ({
     visible: { transition: { staggerChildren, delayChildren } },
 });
 
-// Warna literal (bukan token hex baru — nilainya disalin apa adanya dari
-// --color-fresh / --color-fresh-light / --color-risk-tinggi di app.css).
-// Ditulis literal karena Framer Motion cuma bisa interpolasi warna dengan
-// mulus dari string hex/rgb/hsl, bukan dari `var(--...)` atau `oklch(...)`.
-const HERO_TEXT_FROM = '#74C69D'; // fresh-light
-const HERO_TEXT_TO = '#E85D04'; // risk-tinggi
-const HERO_BUTTON_FROM = '#40916C'; // fresh
-const HERO_BUTTON_TO = '#E85D04'; // risk-tinggi
+const HERO_TEXT_FROM = '#74C69D';
+const HERO_TEXT_TO = '#E85D04';
+const HERO_BUTTON_FROM = '#40916C';
+const HERO_BUTTON_TO = '#E85D04';
 
-// Sengaja TIDAK membungkus Button atau Link dengan motion(). Button di
-// project ini dibangun di atas @base-ui/react (bukan Radix Slot murni), dan
-// begitu child-nya (Link) dibungkus motion.create(), Slot-nya gagal
-// mendeteksi "single valid element" lalu fallback render <button> asli milik
-// Button DI LUAR + Link kita sebagai children biasa DI DALAM — makanya
-// muncul kotak-dalam-kotak. Solusinya: Button & Link tetap 100% plain
-// (persis pola tombol lain yang sudah pasti render benar), warnanya
-// "dititipkan" lewat CSS custom property di motion.div pembungkus (lihat
-// style={{ '--hero-btn-color': heroButtonColor }} di bawah), lalu tombolnya
-// tinggal baca var itu via class `bg-[var(--hero-btn-color)]`.
-
-// Warna aksen per step sengaja dibedakan (bukan cuma satu warna forest polos)
-// supaya section ini tidak terasa flat/monoton — tetap dari palet token yang
-// sama di app.css, bukan hex baru.
 const HOW_IT_WORKS_STEPS = [
     {
         step: '1. Monitor',
@@ -76,9 +56,6 @@ const HOW_IT_WORKS_STEPS = [
     },
 ];
 
-// Class Tailwind ditulis literal (bukan dirakit dari template string) supaya
-// tetap terdeteksi oleh JIT compiler saat build — `bg-${accent}/10` tidak
-// akan ke-scan karena bukan string statis.
 const ACCENT_CLASSES = {
     tinggi: { badge: 'bg-risk-tinggi/10 text-risk-tinggi', blob: 'bg-risk-tinggi/10', ring: 'ring-risk-tinggi/20' },
     sedang: {
@@ -90,19 +67,12 @@ const ACCENT_CLASSES = {
 };
 
 export default function Landing({ stats, previewHotspots }) {
-    // Ref yang sama persis dipakai ForestHeroSection untuk useScroll internalnya
-    // (lihat forwardRef di ForestHeroSection.jsx). Dengan target & offset yang
-    // sama, heroProgress di sini selalu selaras dengan transisi forest -> fire
-    // di background — bukan animasi terpisah yang kebetulan mirip.
     const heroRef = useRef(null);
     const { scrollYProgress: heroProgress } = useScroll({
         target: heroRef,
         offset: ['start start', 'end end'],
     });
 
-    // Rentang 0.1 -> 0.9 sengaja disamakan dengan fireInsetTop di
-    // ForestHeroSection, supaya teks & tombol berubah warna PAS di jendela
-    // waktu yang sama dengan api "memakan" hutan, bukan lebih cepat/lambat.
     const indonesiaColor = useTransform(heroProgress, [0.1, 0.9], [HERO_TEXT_FROM, HERO_TEXT_TO], {
         clamp: true,
     });
@@ -118,13 +88,12 @@ export default function Landing({ stats, previewHotspots }) {
             footerDark
             mainClassName=""
         >
-            {/* Hero — sticky-pinned, background bertransisi forest -> fire mengikuti scroll */}
             <ForestHeroSection ref={heroRef}>
                 <motion.div
                     variants={staggerContainer(0.18, 0.1)}
                     initial="hidden"
                     animate="visible"
-                    className="mx-auto max-w-xl text-center"
+                    className="mx-auto max-w-xl px-4 text-center sm:px-0"
                 >
                     <motion.span
                         variants={fadeUp}
@@ -138,7 +107,7 @@ export default function Landing({ stats, previewHotspots }) {
 
                     <motion.h1
                         variants={fadeUp}
-                        className="font-heading text-4xl font-bold leading-tight text-white [text-shadow:0_2px_16px_rgb(0_0_0_/_55%)] lg:text-5xl"
+                        className="font-heading text-3xl font-bold leading-tight text-white [text-shadow:0_2px_16px_rgb(0_0_0_/_55%)] sm:text-4xl lg:text-5xl"
                     >
                         Pantau Karhutla{' '}
                         <motion.span style={{ color: indonesiaColor }}>Indonesia</motion.span>, Berbasis Data.
@@ -146,7 +115,7 @@ export default function Landing({ stats, previewHotspots }) {
 
                     <motion.p
                         variants={fadeUp}
-                        className="mx-auto mt-5 max-w-md text-base text-white/90 [text-shadow:0_1px_10px_rgb(0_0_0_/_50%)]"
+                        className="mx-auto mt-5 max-w-md text-sm text-white/90 [text-shadow:0_1px_10px_rgb(0_0_0_/_50%)] sm:text-base"
                     >
                         EMBER menggabungkan data satelit NASA FIRMS, analisis deforestasi Global Forest Watch,
                         dan kualitas udara IQAir menjadi satu skor prioritas — supaya siapa saja bisa memahami
@@ -164,7 +133,7 @@ export default function Landing({ stats, previewHotspots }) {
                             }
                             nativeButton={false}
                             size="lg"
-                            className="h-14 bg-[var(--hero-btn-color)] px-8 text-base transition-[filter] hover:brightness-90"
+                            className="h-12 w-full bg-[var(--hero-btn-color)] px-6 text-sm transition-[filter] hover:brightness-90 sm:h-14 sm:w-auto sm:px-8 sm:text-base"
                         >
                             <MapPin className="h-5 w-5" />
                             Cek Daerah Kamu
@@ -173,9 +142,7 @@ export default function Landing({ stats, previewHotspots }) {
                 </motion.div>
             </ForestHeroSection>
 
-            {/* The Problem — kondisi nyata + statistik live, layout 2 kolom */}
             <section className="relative overflow-hidden bg-white">
-                {/* Aksen dekoratif halus, biar section tidak terasa kosong/datar */}
                 <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-risk-tinggi/5 blur-3xl" />
                 <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-fresh/5 blur-3xl" />
 
@@ -184,9 +151,8 @@ export default function Landing({ stats, previewHotspots }) {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.3 }}
-                    className="relative mx-auto grid max-w-7xl grid-cols-1 gap-14 px-6 pt-20 lg:grid-cols-2 lg:items-center"
+                    className="relative mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 pt-12 sm:gap-14 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:items-center"
                 >
-                    {/* Kolom kiri: narasi masalah */}
                     <div>
                         <motion.span
                             variants={fadeUp}
@@ -198,7 +164,7 @@ export default function Landing({ stats, previewHotspots }) {
 
                         <motion.h2
                             variants={fadeUp}
-                            className="mt-4 font-heading text-3xl font-bold leading-tight text-ink"
+                            className="mt-4 font-heading text-2xl font-bold leading-tight text-ink sm:text-3xl"
                         >
                             Karhutla Terjadi Berulang, Setiap Musim Kemarau
                         </motion.h2>
@@ -227,7 +193,6 @@ export default function Landing({ stats, previewHotspots }) {
                         </div>
                     </div>
 
-                    {/* Kolom kanan: statistik live */}
                     <motion.div
                         variants={staggerContainer(0.15)}
                         className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1"
@@ -246,16 +211,15 @@ export default function Landing({ stats, previewHotspots }) {
                     </motion.div>
                 </motion.div>
 
-                {/* Peta titik panas nasional — preview singkat dari data hari ini */}
                 <motion.div
                     variants={fadeUp}
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.2 }}
-                    className="relative mx-auto mt-4 max-w-7xl px-6 pb-20"
+                    className="relative mx-auto mt-4 max-w-7xl px-4 pb-12 sm:px-6 sm:pb-20"
                 >
                     <div className="overflow-hidden rounded-2xl border border-black/5 shadow-sm shadow-black/[0.03]">
-                        <div className="flex items-center justify-between border-b border-black/5 bg-white px-5 py-4">
+                        <div className="flex flex-col gap-2 border-b border-black/5 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
                             <div>
                                 <h3 className="font-heading text-sm font-semibold text-ink">
                                     Peta Titik Panas Nasional
@@ -264,26 +228,25 @@ export default function Landing({ stats, previewHotspots }) {
                                     Preview titik panas terdeteksi hari ini di seluruh Indonesia
                                 </p>
                             </div>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-risk-tinggi/10 px-2.5 py-1 text-xs font-medium text-risk-tinggi">
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-risk-tinggi/10 px-2.5 py-1 text-xs font-medium text-risk-tinggi">
                                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-risk-tinggi" />
                                 Live
                             </span>
                         </div>
-                        <div className="h-[420px] w-full">
+                        <div className="h-[280px] w-full sm:h-[360px] lg:h-[420px]">
                             <MapView hotspots={previewHotspots ?? []} mode="nasional" />
                         </div>
                     </div>
                 </motion.div>
             </section>
 
-            {/* How it Works */}
             <section className="border-b border-black/5 bg-canvas">
-                <div className="mx-auto max-w-7xl px-6 py-20">
+                <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
                     <div className="mx-auto max-w-xl text-center">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-dark/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-forest-dark">
                             Cara Kerja
                         </span>
-                        <h2 className="mt-4 font-heading text-3xl font-bold text-ink">
+                        <h2 className="mt-4 font-heading text-2xl font-bold text-ink sm:text-3xl">
                             Sederhana, Tapi Menyeluruh
                         </h2>
                         <p className="mt-3 text-sm text-ink/60">
@@ -297,9 +260,8 @@ export default function Landing({ stats, previewHotspots }) {
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.3 }}
-                        className="relative mt-16 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8"
+                        className="relative mt-14 grid grid-cols-1 gap-10 sm:mt-16 md:grid-cols-3 md:gap-8"
                     >
-                        {/* Garis penghubung antar-step, cuma tampil di desktop, sejajar dengan bulatan nomor */}
                         <div className="pointer-events-none absolute inset-x-[12%] top-6 hidden border-t-2 border-dashed border-forest-dark/15 md:block" />
 
                         {HOW_IT_WORKS_STEPS.map((item, index) => (
@@ -309,9 +271,7 @@ export default function Landing({ stats, previewHotspots }) {
                 </div>
             </section>
 
-            {/* Data Sources — trust signal */}
             <section className="relative overflow-hidden border-b border-black/5">
-                {/* Aksen dekoratif halus, konsisten dengan section Problem di atas */}
                 <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-forest-dark/[0.04] blur-3xl" />
 
                 <motion.div
@@ -319,9 +279,9 @@ export default function Landing({ stats, previewHotspots }) {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.3 }}
-                    className="relative mx-auto max-w-7xl px-6 py-14 text-center"
+                    className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 sm:py-14"
                 >
-                    <motion.h2 variants={fadeUp} className="font-heading text-2xl font-bold text-ink">
+                    <motion.h2 variants={fadeUp} className="font-heading text-xl font-bold text-ink sm:text-2xl">
                         Data dari Sumber Tepercaya
                     </motion.h2>
                     <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
@@ -341,9 +301,7 @@ export default function Landing({ stats, previewHotspots }) {
                 </motion.div>
             </section>
 
-            {/* CTA Penutup */}
             <section className="relative overflow-hidden bg-forest-dark">
-                {/* Aksen dekoratif halus supaya tidak terasa flat, senada dengan warna fresh & risk di hero */}
                 <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-fresh/10 blur-3xl" />
                 <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-risk-tinggi/10 blur-3xl" />
 
@@ -352,9 +310,9 @@ export default function Landing({ stats, previewHotspots }) {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.4 }}
-                    className="relative mx-auto max-w-7xl px-6 py-14 text-center"
+                    className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 sm:py-14"
                 >
-                    <motion.h2 variants={fadeUp} className="font-heading text-2xl font-bold text-white">
+                    <motion.h2 variants={fadeUp} className="font-heading text-xl font-bold text-white sm:text-2xl">
                         Mulai Pantau Wilayahmu Sekarang
                     </motion.h2>
                     <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-md text-sm text-white/70">
@@ -389,11 +347,6 @@ export default function Landing({ stats, previewHotspots }) {
 }
 
 function formatUpdatedAt(isoString) {
-    // PENTING: config('app.timezone') di backend masih 'UTC' (lihat config/app.php),
-    // jadi isoString dari data_ingestion_logs.finished_at adalah waktu UTC.
-    // Konversi ke Asia/Jakarta dipaksa eksplisit di sini via opsi `timeZone`,
-    // bukan mengandalkan timezone browser pengguna (bisa berbeda-beda) atau
-    // sekadar menempel label "WIB" tanpa konversi.
     const date = new Date(isoString);
     return date.toLocaleString('id-ID', {
         timeZone: 'Asia/Jakarta',
@@ -408,7 +361,7 @@ function StatBlock({ icon, value, label, accent = false }) {
     return (
         <motion.div
             variants={fadeUp}
-            className="rounded-2xl border border-black/5 bg-white p-6 shadow-sm shadow-black/[0.03]"
+            className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm shadow-black/[0.03] sm:p-6"
         >
             <div
                 className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${
@@ -445,17 +398,16 @@ function HowItWorksStep({ image, step, title, description, accent, number }) {
     return (
         <motion.div
             variants={fadeUp}
-            className={`relative rounded-2xl border border-black/5 bg-white p-6 pt-8 shadow-sm shadow-black/[0.03] transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
+            className={`relative rounded-2xl border border-black/5 bg-white p-5 pt-8 shadow-sm shadow-black/[0.03] transition-transform duration-300 hover:-translate-y-1 hover:shadow-md sm:p-6`}
         >
-            {/* Bulatan nomor, sejajar dengan garis penghubung horizontal di atas grid */}
             <div
                 className={`absolute -top-5 left-6 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold ring-4 ring-white ${accentClasses.badge}`}
             >
                 {number}
             </div>
 
-            <div className={`mb-4 flex h-28 w-28 items-center justify-center rounded-2xl ${accentClasses.blob}`}>
-                <img src={image} alt="" aria-hidden="true" className="h-20 w-20 object-contain" />
+            <div className={`mb-4 flex h-24 w-24 items-center justify-center rounded-2xl sm:h-28 sm:w-28 ${accentClasses.blob}`}>
+                <img src={image} alt="" aria-hidden="true" className="h-16 w-16 object-contain sm:h-20 sm:w-20" />
             </div>
 
             <p className="text-xs font-medium uppercase tracking-wide text-ink/40">{step}</p>

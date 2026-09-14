@@ -39,8 +39,6 @@ Route::get('/about', fn () => Inertia::render('About'))->name('about');
 |--------------------------------------------------------------------------
 | Bawaan Breeze — Autentikasi & Profil (opsional untuk EMBER)
 |--------------------------------------------------------------------------
-| Tidak wajib dipakai untuk MVP (PRD.md tidak mensyaratkan akun pengguna),
-| tapi dibiarkan tersedia untuk kebutuhan admin/internal di masa depan.
 */
 
 Route::middleware('auth')->group(function () {

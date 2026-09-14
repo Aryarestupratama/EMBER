@@ -4,11 +4,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import HotspotPopup from '@/components/HotspotPopup';
 
-// Dibaca dari CSS custom property (--color-risk-*, --color-forest-dark) yang
-// sudah didefinisikan di app.css — bukan ditulis ulang di sini. Ini konteks
-// Leaflet (attribute SVG/canvas & <img> divIcon), yang TIDAK bisa resolve
-// var(--x) langsung seperti CSS biasa, jadi nilainya perlu di-resolve sekali
-// ke string hex/rgb lewat getComputedStyle, lalu dipakai sebagai string biasa.
 function cssVar(name, fallback) {
     if (typeof window === 'undefined') return fallback;
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -25,23 +20,10 @@ const RISK_COLOR = {
 
 const FOREST_DARK_COLOR = cssVar('--color-forest-dark', '#1B4332');
 
-// Titik tengah kasar wilayah Indonesia (kira-kira di antara Kalimantan Tengah
-// dan Sulawesi) — dipakai sebagai view AWAL peta (mode nasional, zoom 5)
-// sebelum FlyToLocation (di bawah) membawa peta terbang ke titik target
-// (RegionDetail / AreaCheck).
 const INDONESIA_CENTER = [-2.5, 118];
 
-// Level zoom saat sebuah titik hotspot diklik di peta — dibuat cukup dekat
-// (14) supaya user langsung dapat konteks area sekitar titik, lebih dekat
-// dari zoom target RegionDetail/AreaCheck (11/13) karena di sini fokusnya
-// satu titik spesifik, bukan satu wilayah/radius pengecekan.
 const HOTSPOT_CLICK_ZOOM = 14;
 
-// Kategori yang dapat ikon: rendah -> pohon, selain itu (kuning s/d merah) -> api.
-// 'na' (abu-abu, tidak ada data/klasifikasi) sengaja TIDAK dipaksa jadi salah
-// satu dari keduanya — tetap pakai titik polos (CircleMarker) di bawah, supaya
-// ikon api/pohon murni menandakan "ada klasifikasi risiko", bukan dipakai
-// serampangan untuk kategori yang sebenarnya tidak diketahui.
 const ICON_SHAPE = {
     rendah: 'tree',
     sedang: 'flame',
@@ -49,8 +31,6 @@ const ICON_SHAPE = {
     sangat_tinggi: 'flame',
 };
 
-// Path SVG persis dari lucide-static (paket ikon yang sama dipakai lucide-react
-// di komponen lain), supaya gaya ikonnya konsisten di seluruh aplikasi.
 const FLAME_PATH =
     'M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4';
 const TREE_PATHS = [
@@ -67,7 +47,7 @@ function buildHotspotIcon(category) {
             : `<path d="${FLAME_PATH}" />`;
 
     return L.divIcon({
-        className: '', // reset default styling kotak putih bawaan Leaflet untuk divIcon
+        className: '',
         html: `
             <div style="
                 width: 26px; height: 26px; border-radius: 9999px;
@@ -88,9 +68,6 @@ function buildHotspotIcon(category) {
     });
 }
 
-// Dibuat sekali di module scope (bukan tiap render) — cuma ada 4 kombinasi
-// warna/bentuk yang mungkin, jadi tidak perlu bikin ulang L.divIcon tiap kali
-// daftar hotspot di-render.
 const HOTSPOT_ICONS = {
     rendah: buildHotspotIcon('rendah'),
     sedang: buildHotspotIcon('sedang'),
@@ -98,11 +75,6 @@ const HOTSPOT_ICONS = {
     sangat_tinggi: buildHotspotIcon('sangat_tinggi'),
 };
 
-
-// Pin "lokasi kamu" — bentuk teardrop bertema forest-dark (bukan marker biru
-// default Leaflet), supaya tetap satu bahasa visual dengan ikon hotspot di
-// atas (lingkaran putih + stroke berwarna), alih-alih memasukkan warna asing
-// ke tengah peta yang seluruhnya sudah dipetakan ke palet EMBER.
 const selectedIcon = L.divIcon({
     className: '',
     html: `
@@ -127,14 +99,6 @@ function ClickHandler({ onMapClick }) {
     return null;
 }
 
-// MapContainer hanya membaca prop `center`/`zoom` sekali saat mount — perubahan
-// selanjutnya tidak otomatis menggerakkan peta. Komponen ini hidup di dalam
-// MapContainer (pakai useMap) dan secara eksplisit fly ke lokasi target setiap
-// kali koordinatnya berubah — dipicu klik peta / geolokasi / resolve link Gmaps
-// di AreaCheck, TAPI juga jalan saat pertama kali mount (efek dependency array
-// tetap terpicu di render pertama), sehingga RegionDetail yang datang dari
-// full page-load (Inertia) tetap dapat animasi "zoom masuk" dari peta
-// nasional ke titik wilayah yang dipilih di list prioritas Dashboard.
 function FlyToLocation({ position, zoom = 13 }) {
     const map = useMap();
 
@@ -157,18 +121,9 @@ export default function MapView({
     selectedLocation = null,
     checkRadiusKm = null,
 }) {
-    // Target akhir: RegionDetail pakai `zoomTo`, AreaCheck pakai `selectedLocation`.
-    // Peta SELALU mulai dari view nasional (bukan langsung di titik akhir),
-    // supaya animasi FlyToLocation di bawah punya jarak untuk "terbang masuk" —
-    // baik dipicu perubahan state (AreaCheck) maupun saat pertama render
-    // (RegionDetail, full page-load baru dari Inertia).
     const target = zoomTo ?? selectedLocation;
     const targetZoom = zoomTo ? 11 : 13;
 
-    // Dipegang lewat ref (bukan state) karena instance L.Map ini cuma dipakai
-    // secara imperatif (map.flyTo saat klik marker) — tidak pernah dibaca
-    // untuk keperluan render, jadi tidak perlu (dan tidak boleh, supaya tidak
-    // trigger re-render sia-sia) taruh di state.
     const mapRef = useRef(null);
 
     return (
@@ -193,10 +148,6 @@ export default function MapView({
                     const position = [parseFloat(hotspot.latitude), parseFloat(hotspot.longitude)];
                     const icon = HOTSPOT_ICONS[hotspot.gfw_risk_category];
 
-                    // Klik marker/titik hotspot -> selain Leaflet otomatis buka
-                    // Popup-nya, kita juga secara eksplisit flyTo ke koordinat
-                    // titik itu supaya user langsung "masuk" ke lokasinya,
-                    // bukan cuma lihat popup dari zoom level yang sedang aktif.
                     const eventHandlers = {
                         click: () => {
                             mapRef.current?.flyTo(position, HOTSPOT_CLICK_ZOOM, {
@@ -206,8 +157,6 @@ export default function MapView({
                         },
                     };
 
-                    // Ada ikon (kategori dikenali) -> pakai Marker api/pohon.
-                    // Tidak ada (na / kategori tak dikenal) -> titik polos abu-abu, apa adanya.
                     return icon ? (
                         <Marker key={hotspot.id} position={position} icon={icon} eventHandlers={eventHandlers}>
                             <HotspotPopup hotspot={hotspot} />

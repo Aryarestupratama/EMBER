@@ -6,9 +6,8 @@ use Illuminate\Support\Facades\Http;
 
 class GoogleMapsLinkService
 {
-    // User-Agent browser mobile asli — supaya Google memperlakukan request
-    // ini seperti klik dari HP (URL final presisi ke titik/place), bukan
-    // request generik yang bisa di-fallback ke lokasi berbasis IP server.
+    // User-Agent mobile asli agar Google mengarahkan ke URL final presisi
+    // (bukan fallback ke lokasi berbasis IP server).
     protected const USER_AGENT =
         'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
 
@@ -40,9 +39,6 @@ class GoogleMapsLinkService
     protected function resolveRedirect(string $url): ?string
     {
         try {
-            // allow_redirects dengan track_redirects: ikuti SEMUA hop redirect
-            // (bisa lebih dari satu — consent page, lalu baru URL peta final),
-            // bukan cuma baca header Location sekali seperti versi sebelumnya.
             $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
                 ->withOptions([
                     'allow_redirects' => [
@@ -55,10 +51,8 @@ class GoogleMapsLinkService
 
             $finalUrl = (string) $response->effectiveUri();
 
-            // Kalau ternyata masih nyangkut di halaman consent Google
-            // (kasus umum untuk request tanpa cookie/browser context),
-            // ini sinyal kuat bahwa kita TIDAK dapat URL peta final yang
-            // presisi — jangan lanjut, supaya tidak salah tebak koordinat.
+            // Masih nyangkut di consent page Google -> tidak dapat URL final
+            // yang presisi, jangan lanjut menebak koordinat.
             if (str_contains($finalUrl, 'consent.google.com')) {
                 return null;
             }
@@ -72,10 +66,8 @@ class GoogleMapsLinkService
 
     protected function parseCoordinatesFromUrl(string $url): ?array
     {
-        // Prioritaskan pola !3d!4d (data parameter internal Google Maps)
-        // di atas @lat,lng — pola @lat,lng kadang merepresentasikan pusat
-        // VIEWPORT peta (bisa sedikit bergeser dari pin sebenarnya),
-        // sedangkan !3d!4d adalah koordinat presisi pin/place itu sendiri.
+        // !3d!4d = koordinat presisi pin, diprioritaskan di atas @lat,lng
+        // yang bisa merepresentasikan pusat viewport (bisa bergeser dari pin).
         if (preg_match('/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/', $url, $m)) {
             return ['lat' => (float) $m[1], 'lon' => (float) $m[2]];
         }

@@ -6,19 +6,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { GitCompareArrows, X } from 'lucide-react';
 
-// `compareMode` disimpan lokal di sini (bukan di Dashboard) karena ini murni
-// state UI "lagi mode pilih atau tidak" — tidak perlu dan tidak seharusnya
-// nyampur sama `selectedIds` yang memang milik Dashboard (dipakai juga oleh
-// CompareTrigger & CompareModal).
 export default function RegionRankingList({ regions, selected = [], onToggleSelect, onClearSelection }) {
     const [compareMode, setCompareMode] = useState(false);
 
     const startCompare = () => setCompareMode(true);
 
-    // Keluar dari mode compare: matikan checkbox DAN bersihkan seleksi yang
-    // sudah kepilih (`onClearSelection`) — supaya kalau user buka mode ini
-    // lagi nanti, dia mulai dari kosong, bukan bawa-bawa seleksi lama yang
-    // sudah tidak kelihatan checkbox-nya.
     const cancelCompare = () => {
         setCompareMode(false);
         onClearSelection?.();
@@ -56,12 +48,6 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                 )}
             </CardHeader>
 
-            {/* Panduan singkat, cuma tampil begitu mode compare aktif — bukan
-                noise yang harus dilihat user tiap buka dashboard, tapi hadir
-                tepat saat dibutuhkan (persis setelah klik "Bandingkan Wilayah").
-                Pesannya berubah begitu limit 3 tercapai — supaya "kenapa
-                checkbox ini mati?" langsung terjawab di sini, bukan cuma
-                ditebak dari checkbox yang disabled tanpa keterangan. */}
             {compareMode && (
                 <div className="border-b border-black/5 bg-forest-dark/5 px-4 py-2 text-xs text-forest-dark">
                     {selected.length >= 3 ? (
@@ -86,8 +72,6 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
 
                 {regions.map((item, index) => {
                     const isSelected = selected.includes(item.region.id);
-                    // Batasi maksimum 3 dipilih sekaligus (selaras validasi backend) —
-                    // checkbox yang belum terpilih otomatis nonaktif begitu sudah ada 3.
                     const disableUnselected = !isSelected && selected.length >= 3;
 
                     return (
@@ -98,13 +82,6 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                {/* Checkbox cuma dirender saat compareMode aktif — sebelum
-                                    itu list-nya polos/bersih, tidak ada elemen interaktif
-                                    ekstra yang bikin bingung "checkbox ini buat apa".
-                                    title: alasan kenapa mati muncul di tooltip native saat
-                                    hover, melengkapi opacity baris & pesan panduan di atas —
-                                    3 sinyal berbeda (visual redup, tooltip, teks panduan)
-                                    supaya "kenapa gak bisa diklik" gak cuma bisa ditebak. */}
                                 {onToggleSelect && compareMode && (
                                     <Checkbox
                                         checked={isSelected}

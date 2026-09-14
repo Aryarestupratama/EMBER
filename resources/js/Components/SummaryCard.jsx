@@ -3,10 +3,6 @@ import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Flame, Wind, Radar, Lightbulb } from 'lucide-react';
 
-// Catatan: ambang batas AQI dan isi rekomendasi TIDAK didefinisikan di sini.
-// Keduanya berasal dari backend (MitigationHelper + config/ember.php) agar
-// tetap satu sumber kebenaran (Rules.md §7). Peta di bawah ini murni label
-// tampilan untuk kunci kategori yang dikirim backend, bukan logic ambang batas.
 const AQI_CATEGORY_LABELS = {
     baik: 'Baik',
     sedang: 'Sedang',
@@ -15,13 +11,6 @@ const AQI_CATEGORY_LABELS = {
     berbahaya: 'Berbahaya',
 };
 
-// Warna headline mengikuti keparahan kategori — sebelumnya "AQI {angka}"
-// selalu text-forest-dark (hijau) tak peduli kategorinya, yang menyesatkan
-// kalau kategorinya "Tidak Sehat"/"Berbahaya" (hijau menyiratkan aman).
-// Kategori & urutan keparahan di sini murni label warna, BUKAN threshold —
-// ambang batas numeriknya tetap satu sumber kebenaran di backend
-// (MitigationHelper/config/ember.php, lihat komentar di atas), sama seperti
-// AQI_CATEGORY_LABELS.
 const AQI_CATEGORY_TONE = {
     baik: 'text-forest-dark',
     sedang: 'text-amber-700',
@@ -30,10 +19,6 @@ const AQI_CATEGORY_TONE = {
     berbahaya: 'text-risk-sangat-tinggi',
 };
 
-// Baris section dengan icon dalam chip warna — pola yang sama dengan
-// GuidanceColumn di RegionDetail.jsx (icon + label rata tengah vertikal),
-// supaya "rasa" komponennya konsisten di seluruh aplikasi, bukan cuma
-// label uppercase polos seperti sebelumnya.
 function SectionRow({ icon: Icon, iconClass, bgClass, label, children }) {
     return (
         <div className="flex gap-3">

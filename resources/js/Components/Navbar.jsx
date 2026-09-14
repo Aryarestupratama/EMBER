@@ -1,54 +1,39 @@
 import { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X } from 'lucide-react';
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
 } from '@/components/ui/navigation-menu';
+
 const NAV_ITEMS = [
     { route: 'dashboard', label: 'Dashboard' },
     { route: 'area-check', label: 'Cek Daerah Kamu' },
     { route: 'about', label: 'Metodologi' },
 ];
 
-/**
- * Navbar EMBER — selalu `fixed` (bukan sticky) supaya TIDAK makan ruang di
- * layout sama sekali. Ini penting khusus di Landing: hero di baliknya bisa
- * mulai persis dari y=0 tanpa celah putih. Konsekuensinya, halaman lain
- * (variant="solid") perlu padding-top di <main> sebesar tinggi navbar —
- * ini sudah diatur otomatis lewat AppLayout, tidak perlu diubah manual.
- *
- * 2 varian:
- * - variant="solid" (default, halaman selain Landing): dari awal sudah
- *   background putih + teks gelap, tetap begitu terus (tidak ada hero
- *   gelap di baliknya untuk dijaga transparansinya).
- * - variant="transparent" (Landing): mulai transparan + teks putih di atas
- *   hero. Begitu discroll (scrollY > 8px), otomatis switch ke background
- *   putih blur + teks gelap — supaya tetap kebaca begitu ketemu section
- *   putih di bawah hero, bukan cuma pas di atas hero saja.
- *
- * Props:
- * - active  : 'dashboard' | 'area-check' | 'about' | null
- * - variant : 'solid' | 'transparent' (default 'solid')
- */
 export default function Navbar({ active = null, variant = 'solid' }) {
     const isTransparentVariant = variant === 'transparent';
     const [scrolled, setScrolled] = useState(false);
     const [hovered, setHovered] = useState(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
-        if (!isTransparentVariant) return; // solid: warna sudah fix, tidak perlu listener
+        setMobileOpen(false);
+    }, [active]);
+
+    useEffect(() => {
+        if (!isTransparentVariant) return;
         const onScroll = () => setScrolled(window.scrollY > 8);
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
     }, [isTransparentVariant]);
 
-    // "showSolidStyle" = kapan navbar tampil sebagai bar putih blur + teks gelap.
-    // solid variant: selalu true. transparent variant: cuma setelah discroll.
-    const showSolidStyle = !isTransparentVariant || scrolled;
+    const showSolidStyle = !isTransparentVariant || scrolled || mobileOpen;
 
     const headerBgClass = showSolidStyle
         ? 'border-b border-black/5 bg-white/80 backdrop-blur-md'
@@ -66,7 +51,7 @@ export default function Navbar({ active = null, variant = 'solid' }) {
             className={`fixed inset-x-0 top-0 transition-[background-color,backdrop-filter,border-color] duration-300 ${headerBgClass}`}
         >
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <Link href={route('home')} className="flex items-center gap-2">
+                <Link href={route('home')} className="flex shrink-0 items-center gap-2">
                     <img src="/assets/logo/ember-logo.png" alt="" aria-hidden="true" className="h-8 w-auto" />
                     <span
                         className={`font-heading text-xl font-bold tracking-tight transition-colors duration-300 ${logoClass}`}
@@ -75,7 +60,7 @@ export default function Navbar({ active = null, variant = 'solid' }) {
                     </span>
                 </Link>
 
-                <NavigationMenu>
+                <NavigationMenu className="hidden md:block">
                     <NavigationMenuList
                         className="relative flex items-center gap-1"
                         onMouseLeave={() => setHovered(null)}
@@ -91,9 +76,6 @@ export default function Navbar({ active = null, variant = 'solid' }) {
                                     {item.label}
                                 </NavigationMenuLink>
 
-                                {/* Pill background: hanya 1 instance yang "hidup" berkat
-                                    layoutId sama di semua item — Framer Motion otomatis
-                                    animasikan posisi/ukurannya saat pindah item. */}
                                 {hovered === item.route && (
                                     <motion.div
                                         layoutId={`nav-hover-pill-${variant}`}
@@ -106,9 +88,49 @@ export default function Navbar({ active = null, variant = 'solid' }) {
                     </NavigationMenuList>
                 </NavigationMenu>
 
-                {/* spacer supaya logo & nav tetap center-balanced (menu Dashboard sudah ada di NAV_ITEMS) */}
-                <div className="w-0 sm:w-[1px]" aria-hidden="true" />
+                <div className="hidden w-0 sm:block sm:w-[1px] md:hidden" aria-hidden="true" />
+
+                <button
+                    type="button"
+                    onClick={() => setMobileOpen((v) => !v)}
+                    aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
+                    aria-expanded={mobileOpen}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 md:hidden ${
+                        showSolidStyle ? 'text-ink/70 hover:bg-black/5' : 'text-white hover:bg-white/15'
+                    }`}
+                >
+                    {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+                </button>
             </div>
+
+            <AnimatePresence>
+                {mobileOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="overflow-hidden border-t border-black/5 bg-white md:hidden"
+                    >
+                        <div className="flex flex-col px-6 py-3">
+                            {NAV_ITEMS.map((item) => (
+                                <Link
+                                    key={item.route}
+                                    href={route(item.route)}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                        active === item.route
+                                            ? 'bg-forest-dark/10 text-forest-dark'
+                                            : 'text-ink/70 hover:bg-canvas hover:text-forest-dark'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </header>
     );
 }

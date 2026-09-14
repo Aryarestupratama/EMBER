@@ -5,12 +5,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    /* ----------------------------------------------------------------
-       Token semantik shadcn di-remap ke palet EMBER (Design.md §2).
-       Prinsipnya sama seperti --color-risk-*: hex sumber tunggal ada
-       di sini, komponen tetap pakai kelas Tailwind ter-generate
-       (bg-primary, bg-accent, dst) tanpa perlu diubah satu-satu.
-       ---------------------------------------------------------------- */
     --background: #F8F9FA;
     --foreground: #343A40;
     --card: oklch(1 0 0);
@@ -115,15 +109,7 @@
     --font-sans: var(--font-sans);
     --font-heading: var(--font-heading);
 
-    /* ================================================================
-       Token warna EMBER — Design.md §2
-       INI SATU-SATUNYA TEMPAT hex risiko/brand didefinisikan.
-       Jangan tulis ulang hex ini di file komponen manapun (Rules.md §7).
-       Kalau butuh warna ini di komponen: pakai kelas Tailwind yang
-       ter-generate (bg-risk-tinggi, text-forest-dark, dst), atau kalau
-       butuh dinamis di inline style, rujuk var(--color-risk-tinggi) —
-       jangan tulis ulang angka hex-nya.
-       ================================================================ */
+    /* Token warna EMBER */
     --color-forest: #2D6A4F;
     --color-forest-dark: #1B4332;
     --color-fresh: #40916C;
@@ -136,11 +122,7 @@
     --color-canvas: #F8F9FA;
     --color-ink: #343A40;
 
-    /* ================================================================
-       Token ukuran untuk angka statistik besar (StatTile, dashboard).
-       Sebelumnya dipakai sebagai `text-stat-md` tanpa definisi apapun —
-       browser diam-diam fallback ke ukuran default tanpa error terlihat.
-       ================================================================ */
+    /* Ukuran angka statistik besar (StatTile, dashboard) */
     --text-stat-sm: 1.5rem;
     --text-stat-sm--line-height: 1.9rem;
     --text-stat-md: 1.875rem;
@@ -167,15 +149,7 @@
     }
 }
 
-/* ================================================================
-   Override chrome Leaflet popup (dipakai HotspotPopup di MapView.jsx).
-   Leaflet punya padding & font-family sendiri di .leaflet-popup-content
-   yang nilainya beda-beda antar versi — daripada dilawan pakai margin
-   negatif tebak-tebakan di komponen (rapuh, gampang meleset), padding
-   bawaannya dimatikan total di sini, lalu komponen yang atur spacing-nya
-   sendiri lewat class Tailwind biasa (p-4, dst). Efeknya juga lebih
-   presisi: gap kiri/kanan/atas/bawah dijamin sama rata.
-   ================================================================ */
+/* Reset padding bawaan Leaflet popup; spacing diatur lewat class Tailwind di komponen */
 .leaflet-popup-content-wrapper {
     padding: 0;
     border-radius: var(--radius-lg);

@@ -3,20 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import ScoreBreakdown from '@/components/ScoreBreakdown';
 import RiskBadge from '@/components/RiskBadge';
 
-// Fetch dipicu tiap kali modal dibuka dengan set regionIds yang berbeda —
-// bukan Inertia visit, karena ini cuma partial data untuk overlay, bukan
-// perpindahan halaman (state Dashboard di baliknya tidak boleh ikut reload).
 export default function CompareModal({ open, onOpenChange, regionIds }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Reset data lama begitu seleksi tidak lagi valid (<2 wilayah) — tanpa
-        // ini, `data` dari fetch sebelumnya tetap nyangkut di state, dan blok
-        // render `!loading && !error` di bawah tetap nampilin hasil compare
-        // yang sudah tidak sesuai seleksi user saat ini (mis. user hapus 2
-        // dari 3 wilayah terpilih, tapi modal masih nampilin 3 kartu lama).
         if (!open || regionIds.length < 2) {
             setData([]);
             return;
@@ -40,12 +32,6 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            {/* sm:max-w-4xl (bukan cuma max-w-4xl): default DialogContent di
-                dialog.jsx punya "sm:max-w-sm" bawaan. Class tanpa prefix
-                breakpoint gak dianggap "konflik" sama class ber-prefix sm:
-                oleh tailwind-merge, jadi keduanya ikut ke-apply dan
-                sm:max-w-sm menang di layar >=640px — itu sebabnya modal
-                kepaksa sempit (dempet) walau sudah dikasih max-w-4xl. */}
             <DialogContent className="max-h-[85vh] max-w-4xl sm:max-w-4xl overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="font-heading">Bandingkan Wilayah</DialogTitle>
@@ -55,10 +41,6 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
                     <p className="py-8 text-center text-sm text-ink/50">Memuat data...</p>
                 )}
 
-                {/* text-risk-sangat-tinggi (merah), bukan text-risk-tinggi (oranye):
-                    ini pesan error aplikasi (gagal fetch), bukan indikator kategori
-                    risiko wilayah — dipakai warna alert paling tegas supaya maknanya
-                    tidak tertukar dengan badge kategori "Tinggi" di kartu sebelahnya. */}
                 {error && (
                     <p className="py-8 text-center text-sm text-risk-sangat-tinggi">{error}</p>
                 )}
@@ -70,15 +52,9 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
                 )}
 
                 {!loading && !error && regionIds.length >= 2 && (
-                    // grid-cols-1 di mobile (kartu ditumpuk vertikal, bukan diperas
-                    // jadi 2-3 kolom sempit) — baru pindah ke multi-kolom di md ke atas.
                     <div className={`grid grid-cols-1 gap-4 ${data.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                         {data.map((item) => (
                             <div key={item.region.id} className="space-y-2">
-                                {/* min-w-0 + truncate di blok nama: mencegah nama wilayah
-                                    panjang ("Kabupaten Ogan Komering Ilir") mendorong/
-                                    menabrak badge. shrink-0 di badge: badge tidak pernah
-                                    ikut diperas walau nama wilayah panjang. */}
                                 <div className="flex items-start justify-between gap-2 px-1">
                                     <div className="min-w-0">
                                         <p className="truncate text-sm font-medium text-ink" title={item.region.name}>

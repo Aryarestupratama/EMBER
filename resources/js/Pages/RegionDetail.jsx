@@ -8,10 +8,6 @@ import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Flame, Wind, CheckCircle2 } from 'lucide-react';
 
-// Sama persis pola di Dashboard.jsx — animasi dipicu `animate` (langsung
-// jalan pas halaman dimuat), bukan `whileInView`, karena ini halaman detail
-// yang isinya harus langsung kebaca begitu dibuka, bukan section yang baru
-// "reveal" saat di-scroll.
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
@@ -27,8 +23,6 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
 
     return (
         <AppLayout title={region.name}>
-            {/* Aksen dekoratif halus, konsisten dengan Dashboard.jsx — cuma dekorasi,
-                tidak pernah menghalangi klik atau bikin layout melebar. */}
             <div className="pointer-events-none absolute -top-10 right-0 -z-10 h-72 w-72 rounded-full bg-forest-dark/[0.04] blur-3xl" />
             <div className="pointer-events-none absolute top-96 -left-16 -z-10 h-64 w-64 rounded-full bg-fresh/[0.05] blur-3xl" />
 
@@ -43,15 +37,15 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                     </Link>
                 </motion.div>
 
-                <motion.div variants={fadeUp} className="mb-6 flex items-start justify-between">
+                <motion.div variants={fadeUp} className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="font-heading text-2xl font-bold text-ink">{region.name}</h1>
+                        <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">{region.name}</h1>
                         <p className="mt-1 text-sm text-ink/60">{region.province}</p>
                     </div>
                     {score && (
                         <RiskBadge
                             category={score.priority_rank_category}
-                            className="px-3 py-1.5 text-sm"
+                            className="w-fit px-3 py-1.5 text-sm"
                         />
                     )}
                 </motion.div>
@@ -61,7 +55,7 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                         variants={fadeUp}
                         className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm lg:col-span-2"
                     >
-                        <div className="h-[420px]">
+                        <div className="h-[280px] sm:h-[360px] lg:h-[420px]">
                             <MapView
                                 hotspots={hotspots}
                                 mode="zoom-lokasi"
@@ -79,9 +73,6 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                     <motion.div variants={fadeUp}>
                         <Card className="mt-6 border-black/5 shadow-sm">
                             <CardContent className="p-4">
-                                {/* Stagger sendiri di dalam stagger utama, sama pola dengan
-                                    grid SourceBlock/StatTile — dua kolom panduan muncul
-                                    bergantian, tiap poin di dalamnya juga ikut ber-stagger. */}
                                 <motion.div
                                     variants={staggerContainer(0.15)}
                                     className="grid grid-cols-1 gap-4 sm:grid-cols-2"
@@ -127,8 +118,8 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                         </Card>
                     ) : (
                         <div className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm">
-                            <div className="max-h-[420px] overflow-y-auto">
-                                <table className="w-full text-sm">
+                            <div className="max-h-[420px] overflow-x-auto overflow-y-auto">
+                                <table className="w-full min-w-[560px] text-sm">
                                     <thead className="sticky top-0 z-10 border-b border-black/5 bg-canvas text-left text-xs uppercase tracking-wide text-ink/40">
                                         <tr>
                                             <th className="px-4 py-2.5">Tanggal</th>
@@ -173,13 +164,6 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
     );
 }
 
-// Sebelumnya: satu <ul> flat dengan bullet "•" polos, dua kolom duduk di
-// dalam satu Card putih tanpa pembeda visual apa pun — dari kejauhan
-// keliatan seperti satu blok teks besar, bukan "panduan" yang gampang
-// dipindai per poin. Sekarang tiap kolom dapat aksen warna sendiri (oranye
-// untuk fire risk, hijau/fresh untuk kualitas udara — senada dgn ikon Flame
-// yg sudah dipakai di section hotspot di bawah), dan tiap poin jadi baris
-// kartu kecil sendiri (bukan bullet), supaya scan-able satu-satu.
 function GuidanceColumn({ icon: Icon, accentClass, iconClass, title, points }) {
     return (
         <div className={`rounded-xl border p-4 ${accentClass}`}>

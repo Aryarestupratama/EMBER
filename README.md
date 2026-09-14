@@ -12,7 +12,7 @@ Tema: *"Innovating for a Sustainable Future: Empowering Communities through Web 
 > hari pengujian menunjukkan instabilitas server yang konsisten (timeout, error 503, kegagalan Web
 > Adaptor), sumber data risiko dialihkan ke Global Forest Watch (GFW), menggunakan analisis tree
 > cover loss sebagai proksi risiko karhutla berulang. Detail lengkap ada di dokumentasi teknis
-> (`docs/Architecture.md` §2).
+> (`docs/Architecture.md`).
 
 ---
 
@@ -222,7 +222,8 @@ php artisan schedule:work  # Terminal 3 — jalankan job terjadwal untuk testing
 
 - Skor risiko adalah **proksi statistik** dari data deforestasi historis (tree cover loss GFW),
   bukan prediksi resmi lembaga pemerintah.
-- Threshold kategori risiko diturunkan dari sampel 20 titik hotspot pengujian awal — dapat
+- Threshold kategori risiko diturunkan dari sampel 20 titik koordinat di area rawan karhutla
+  Kalimantan dan Sumatra (19 titik valid, min 0.43%, max 24.37%, rata-rata 11.79%) — dapat
   diperbarui dengan sampel lebih besar (50–100+ titik) pada iterasi berikutnya.
 - Reverse-lookup hotspot ke wilayah menggunakan pendekatan nearest-centroid (Haversine), bukan
   point-in-polygon presisi terhadap batas administratif asli.
@@ -250,7 +251,7 @@ Dosen Pembimbing: Siti Maesaroh, S.Kom., M.T.I.
 
 | Nama | Peran |
 |---|---|
-| Arya Restu Pratama | [Peran] |
-| Justin Dwinata | [Peran] |
-| Mutia Bela Puspita | [Peran] |
-| Azka Niaji Rangkuti | [Peran] |
+| Arya Restu Pratama | Project Lead / Backend Developer |
+| Justin Dwinata | Frontend Developer |
+| Mutia Bela Puspita | UI/UX Designer & Documentation Lead |
+| Azka Niaji Rangkuti | Data & Integration Engineer |

@@ -16,9 +16,7 @@ class IqairService
     }
 
     /**
-     * Ambil data AQI kota terdekat dari sebuah koordinat.
-     *
-     * @return array{aqi: int, city: string, state: string}|null null jika gagal
+     * @return array{aqi: int, city: string, state: string}|null
      */
     public function nearestCity(float $lat, float $lon): ?array
     {

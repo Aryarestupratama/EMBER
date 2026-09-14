@@ -3,12 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 
-// Sebelumnya: hex hardcode (#2D6A4F, #40916C, #74C69D) — duplikat dari token app.css.
-// Sekarang: pakai kelas Tailwind yang sudah di-generate dari token forest/fresh.
-//
-// `tooltip`: penjelasan singkat cara komponen ini dihitung, muncul saat hover
-// ikon info di sebelah label — supaya bobot 0.4/0.4/0.2 (Rules.md §3) tidak
-// terasa seperti angka acak bagi pengguna awam.
 const COMPONENTS = [
     {
         key: 'gfw_risk',
@@ -69,9 +63,6 @@ export default function ScoreBreakdown({ score }) {
         );
     }
 
-    // avg_gfw_risk_score bisa null (semua hotspot di wilayah ini gagal di-enrich GFW).
-    // Ini beda makna dari 0 (risiko terukur rendah) — Rules.md §2 & §5 tegas soal ini,
-    // jadi UI juga harus bilang "tidak tersedia", bukan diam-diam menampilkan 0%.
     const gfwUnavailable = score.avg_gfw_risk_score === null || score.avg_gfw_risk_score === undefined;
 
     const normalized = {
@@ -124,13 +115,6 @@ export default function ScoreBreakdown({ score }) {
                                         }}
                                     />
                                 ) : (
-                                    // Lebar dianimasikan dari 0 -> nilai aslinya (bukan style
-                                    // width statis + `transition-all` seperti sebelumnya, yang
-                                    // cuma keliatan kalau value-nya berubah SETELAH mount, tidak
-                                    // pernah kejalan pas render pertama). delay di-stagger tiap
-                                    // baris (index * 0.12) + jeda kecil (0.25s) supaya mulai
-                                    // ngisi sesaat setelah card-nya sendiri selesai muncul
-                                    // (fadeUp di RegionDetail.jsx), bukan race bareng.
                                     <motion.div
                                         className={`h-full rounded-full ${c.barClass}`}
                                         initial={{ width: 0 }}
