@@ -36,14 +36,11 @@ const PRIORITY_SCORE_TOOLTIP =
 function InfoTooltip({ text }) {
     return (
         <Tooltip>
-            <TooltipTrigger asChild>
-                <button
-                    type="button"
-                    className="text-ink/30 hover:text-ink/60 transition-colors"
-                    aria-label="Penjelasan"
-                >
-                    <Info className="size-3.5" />
-                </button>
+            <TooltipTrigger
+                className="text-ink/30 hover:text-ink/60 transition-colors"
+                aria-label="Penjelasan"
+            >
+                <Info className="size-3.5" />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-64 text-sm">
                 {text}

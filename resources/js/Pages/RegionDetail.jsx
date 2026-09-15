@@ -1,12 +1,38 @@
+import { useMemo, useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import AppLayout from '@/Layouts/AppLayout';
 import MapView from '@/components/MapView';
 import RiskBadge from '@/components/RiskBadge';
 import ScoreBreakdown from '@/components/ScoreBreakdown';
 import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Flame, Wind, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Flame, Wind, CheckCircle2, ChevronDown } from 'lucide-react';
+
+const SEVERITY_ORDER = ['na', 'rendah', 'sedang', 'tinggi', 'sangat_tinggi'];
+
+function groupHotspotsByDate(hotspots) {
+    const groups = [];
+    const indexByDate = new Map();
+
+    hotspots.forEach((hotspot) => {
+        const dateKey = hotspot.acq_date;
+        if (!indexByDate.has(dateKey)) {
+            indexByDate.set(dateKey, groups.length);
+            groups.push({ date: dateKey, items: [] });
+        }
+        groups[indexByDate.get(dateKey)].items.push(hotspot);
+    });
+
+    return groups.map((group) => {
+        const dominant = group.items.reduce((acc, h) => {
+            const rank = SEVERITY_ORDER.indexOf(h.gfw_risk_category ?? 'na');
+            return rank > SEVERITY_ORDER.indexOf(acc) ? h.gfw_risk_category : acc;
+        }, 'na');
+
+        return { ...group, dominantCategory: dominant };
+    });
+}
 
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
@@ -20,6 +46,24 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
 
 export default function RegionDetail({ region, score, hotspots, mitigation }) {
     const center = [parseFloat(region.centroid_lat), parseFloat(region.centroid_lon)];
+
+    const groupedHotspots = useMemo(() => groupHotspotsByDate(hotspots), [hotspots]);
+
+    const [expandedDates, setExpandedDates] = useState(() =>
+        groupedHotspots.length > 0 ? new Set([groupedHotspots[0].date]) : new Set()
+    );
+
+    function toggleDate(date) {
+        setExpandedDates((prev) => {
+            const next = new Set(prev);
+            if (next.has(date)) {
+                next.delete(date);
+            } else {
+                next.add(date);
+            }
+            return next;
+        });
+    }
 
     return (
         <AppLayout title={region.name}>
@@ -117,41 +161,87 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm">
-                            <div className="max-h-[420px] overflow-x-auto overflow-y-auto">
-                                <table className="w-full min-w-[560px] text-sm">
-                                    <thead className="sticky top-0 z-10 border-b border-black/5 bg-canvas text-left text-xs uppercase tracking-wide text-ink/40">
-                                        <tr>
-                                            <th className="px-4 py-2.5">Tanggal</th>
-                                            <th className="px-4 py-2.5">Koordinat</th>
-                                            <th className="px-4 py-2.5">Confidence</th>
-                                            <th className="px-4 py-2.5">FRP</th>
-                                            <th className="px-4 py-2.5">Risiko</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-black/5">
-                                        {hotspots.map((h) => (
-                                            <tr key={h.id}>
-                                                <td className="px-4 py-2.5 text-ink/70">
-                                                    {new Date(h.acq_date).toLocaleDateString('id-ID', {
+                        <div className="space-y-2">
+                            {groupedHotspots.map((group) => {
+                                const isOpen = expandedDates.has(group.date);
+
+                                return (
+                                    <div
+                                        key={group.date}
+                                        className="overflow-hidden rounded-xl border border-black/5 bg-white shadow-sm"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleDate(group.date)}
+                                            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <ChevronDown
+                                                    className={`h-4 w-4 shrink-0 text-ink/40 transition-transform ${
+                                                        isOpen ? 'rotate-180' : ''
+                                                    }`}
+                                                />
+                                                <span className="text-sm font-medium text-ink">
+                                                    {new Date(group.date).toLocaleDateString('id-ID', {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
                                                     })}
-                                                </td>
-                                                <td className="tabular-nums px-4 py-2.5 text-ink/70">
-                                                    {parseFloat(h.latitude).toFixed(4)}, {parseFloat(h.longitude).toFixed(4)}
-                                                </td>
-                                                <td className="tabular-nums px-4 py-2.5 text-ink/70">{h.confidence}%</td>
-                                                <td className="tabular-nums px-4 py-2.5 text-ink/70">{h.frp}</td>
-                                                <td className="px-4 py-2.5">
-                                                    <RiskBadge category={h.gfw_risk_category} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </span>
+                                                <span className="text-xs text-ink/50">
+                                                    {group.items.length} titik
+                                                </span>
+                                            </div>
+                                            <RiskBadge category={group.dominantCategory} />
+                                        </button>
+
+                                        <AnimatePresence initial={false}>
+                                            {isOpen && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                                    className="overflow-hidden border-t border-black/5"
+                                                >
+                                                    <div className="max-h-[320px] overflow-x-auto overflow-y-auto">
+                                                        <table className="w-full min-w-[560px] text-sm">
+                                                            <thead className="sticky top-0 z-10 border-b border-black/5 bg-canvas text-left text-xs uppercase tracking-wide text-ink/40">
+                                                                <tr>
+                                                                    <th className="px-4 py-2.5">Posisi</th>
+                                                                    <th className="px-4 py-2.5">Confidence</th>
+                                                                    <th className="px-4 py-2.5">FRP</th>
+                                                                    <th className="px-4 py-2.5">Risiko</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-black/5">
+                                                                {group.items.map((h) => (
+                                                                    <tr key={h.id}>
+                                                                        <td className="px-4 py-2.5 text-ink/70">
+                                                                            {h.distance_from_centroid_km} km{' '}
+                                                                            {h.direction_from_centroid} dari pusat{' '}
+                                                                            {region.name}
+                                                                        </td>
+                                                                        <td className="tabular-nums px-4 py-2.5 text-ink/70">
+                                                                            {h.confidence}%
+                                                                        </td>
+                                                                        <td className="tabular-nums px-4 py-2.5 text-ink/70">
+                                                                            {h.frp}
+                                                                        </td>
+                                                                        <td className="px-4 py-2.5">
+                                                                            <RiskBadge category={h.gfw_risk_category} />
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </motion.div>

@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Circle, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Circle, Marker, useMapEvents, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import L from 'leaflet';
 import HotspotPopup from '@/components/HotspotPopup';
 
@@ -65,6 +68,27 @@ function buildHotspotIcon(category) {
         iconSize: [26, 26],
         iconAnchor: [13, 13],
         popupAnchor: [0, -13],
+        riskCategory: category,
+    });
+}
+
+function buildNaIcon() {
+    const color = RISK_COLOR.na;
+    return L.divIcon({
+        className: '',
+        html: `
+            <div style="
+                width: 26px; height: 26px; border-radius: 9999px;
+                background: #fff; border: 2px dashed ${color};
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+                font-weight: 700; font-size: 13px; color: ${color};
+            ">?</div>
+        `,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -13],
+        riskCategory: 'na',
     });
 }
 
@@ -73,7 +97,51 @@ const HOTSPOT_ICONS = {
     sedang: buildHotspotIcon('sedang'),
     tinggi: buildHotspotIcon('tinggi'),
     sangat_tinggi: buildHotspotIcon('sangat_tinggi'),
+    na: buildNaIcon(),
 };
+
+// Urutan severity untuk menentukan warna cluster: kalau sebuah cluster berisi
+// campuran kategori, warna bubble mengikuti kategori TERTINGGI di dalamnya
+// (prinsip "jangan menyembunyikan sinyal bahaya" — cluster tidak boleh
+// terlihat aman/hijau kalau ada 1 titik sangat_tinggi di dalamnya).
+const SEVERITY_ORDER = ['na', 'rendah', 'sedang', 'tinggi', 'sangat_tinggi'];
+
+function getClusterDominantCategory(cluster) {
+    let dominant = 'na';
+    let dominantRank = -1;
+
+    cluster.getAllChildMarkers().forEach((marker) => {
+        const category = marker.options?.icon?.options?.riskCategory ?? 'na';
+        const rank = SEVERITY_ORDER.indexOf(category);
+        if (rank > dominantRank) {
+            dominantRank = rank;
+            dominant = category;
+        }
+    });
+
+    return dominant;
+}
+
+function createClusterIcon(cluster) {
+    const count = cluster.getChildCount();
+    const category = getClusterDominantCategory(cluster);
+    const color = RISK_COLOR[category] ?? RISK_COLOR.na;
+    const size = count < 10 ? 34 : count < 100 ? 42 : 50;
+
+    return L.divIcon({
+        className: '',
+        html: `
+            <div style="
+                width: ${size}px; height: ${size}px; border-radius: 9999px;
+                background: ${color}; border: 3px solid #fff;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                color: #fff; font-weight: 700; font-size: ${count < 100 ? 14 : 13}px;
+            ">${count}</div>
+        `,
+        iconSize: [size, size],
+    });
+}
 
 const selectedIcon = L.divIcon({
     className: '',
@@ -144,40 +212,32 @@ export default function MapView({
 
                 {target && <FlyToLocation position={target} zoom={targetZoom} />}
 
-                {hotspots.map((hotspot) => {
-                    const position = [parseFloat(hotspot.latitude), parseFloat(hotspot.longitude)];
-                    const icon = HOTSPOT_ICONS[hotspot.gfw_risk_category];
+                <MarkerClusterGroup
+                    chunkedLoading
+                    maxClusterRadius={60}
+                    spiderfyOnMaxZoom
+                    iconCreateFunction={createClusterIcon}
+                >
+                    {hotspots.map((hotspot) => {
+                        const position = [parseFloat(hotspot.latitude), parseFloat(hotspot.longitude)];
+                        const icon = HOTSPOT_ICONS[hotspot.gfw_risk_category] ?? HOTSPOT_ICONS.na;
 
-                    const eventHandlers = {
-                        click: () => {
-                            mapRef.current?.flyTo(position, HOTSPOT_CLICK_ZOOM, {
-                                duration: 1.2,
-                                easeLinearity: 0.25,
-                            });
-                        },
-                    };
+                        const eventHandlers = {
+                            click: () => {
+                                mapRef.current?.flyTo(position, HOTSPOT_CLICK_ZOOM, {
+                                    duration: 1.2,
+                                    easeLinearity: 0.25,
+                                });
+                            },
+                        };
 
-                    return icon ? (
-                        <Marker key={hotspot.id} position={position} icon={icon} eventHandlers={eventHandlers}>
-                            <HotspotPopup hotspot={hotspot} />
-                        </Marker>
-                    ) : (
-                        <CircleMarker
-                            key={hotspot.id}
-                            center={position}
-                            radius={6}
-                            pathOptions={{
-                                color: RISK_COLOR.na,
-                                fillColor: RISK_COLOR.na,
-                                fillOpacity: 0.7,
-                                weight: 1.5,
-                            }}
-                            eventHandlers={eventHandlers}
-                        >
-                            <HotspotPopup hotspot={hotspot} />
-                        </CircleMarker>
-                    );
-                })}
+                        return (
+                            <Marker key={hotspot.id} position={position} icon={icon} eventHandlers={eventHandlers}>
+                                <HotspotPopup hotspot={hotspot} />
+                            </Marker>
+                        );
+                    })}
+                </MarkerClusterGroup>
 
                 {selectedLocation && (
                     <>
