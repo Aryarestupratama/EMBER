@@ -11,7 +11,7 @@ use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
-| EMBER — Rute Publik (tidak perlu login)
+| EMBER  Rute Publik (tidak perlu login)
 |--------------------------------------------------------------------------
 */
 
@@ -37,7 +37,7 @@ Route::get('/about', fn () => Inertia::render('About'))->name('about');
 
 /*
 |--------------------------------------------------------------------------
-| Bawaan Breeze — Autentikasi & Profil (opsional untuk EMBER)
+| Bawaan Breeze  Autentikasi & Profil (opsional untuk EMBER)
 |--------------------------------------------------------------------------
 */
 

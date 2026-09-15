@@ -23,7 +23,7 @@ class LandingController extends Controller
 
                 // Rules.md §4: setiap halaman yang menampilkan data wajib
                 // menampilkan timestamp "data terakhir diperbarui" dari
-                // data_ingestion_logs — bukan klaim jadwal statis di frontend.
+                // data_ingestion_logs  bukan klaim jadwal statis di frontend.
                 // Diambil dari log ingest terakhir yang selesai (success/partial),
                 // lintas sumber (firms/gfw/iqair), agar mencerminkan kondisi
                 // nyata meski salah satu sumber sedang gagal (Architecture.md §6).

@@ -1,11 +1,11 @@
-# EMBER — Early Monitoring for Burning Environment & Reforestation
+# EMBER  Early Monitoring for Burning Environment & Reforestation
 
-Platform web yang mengagregasi tiga sumber data resmi — titik panas satelit (NASA FIRMS), risiko
-deforestasi historis (Global Forest Watch), dan kualitas udara (IQAir) — menjadi satu skor prioritas
+Platform web yang mengagregasi tiga sumber data resmi  titik panas satelit (NASA FIRMS), risiko
+deforestasi historis (Global Forest Watch), dan kualitas udara (IQAir)  menjadi satu skor prioritas
 per wilayah administratif untuk memantau dan memitigasi kebakaran hutan dan lahan (karhutla) di
 Indonesia.
 
-Dibangun untuk **International Web Technology Competition — Gayatama 5 (UNESA)**.
+Dibangun untuk **International Web Technology Competition  Gayatama 5 (UNESA)**.
 Tema: *"Innovating for a Sustainable Future: Empowering Communities through Web Technology"*.
 
 > **Catatan riwayat:** sumber data risiko awalnya dirancang menggunakan BNPB InaRISK. Setelah 3
@@ -45,7 +45,7 @@ Tema: *"Innovating for a Sustainable Future: Empowering Communities through Web 
 | [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/) | Titik panas satelit real-time (VIIRS/MODIS) | MAP_KEY (gratis via email) |
 | [Global Forest Watch Data API](https://data-api.globalforestwatch.org/) | Tree cover loss sebagai proksi risiko karhutla | API key (sign-up mandiri) |
 | [IQAir AirVisual](https://www.iqair.com/dashboard/api) | Kualitas udara (AQI) kota terdekat | API key (gratis, free tier) |
-| [GADM v4.1](https://gadm.org/) | Batas wilayah administratif (502 kabupaten/kota), data preparation satu kali | — |
+| [GADM v4.1](https://gadm.org/) | Batas wilayah administratif (502 kabupaten/kota), data preparation satu kali |  |
 
 Detail formula skor risiko dan Priority Score ada di `docs/Rules.md`.
 
@@ -91,7 +91,7 @@ npm install --legacy-peer-deps
 npm install leaflet react-leaflet@4 --legacy-peer-deps
 ```
 
-react-leaflet v4 dipakai secara sengaja (kompatibel React 18 bawaan Breeze) — v5 butuh React 19 dan
+react-leaflet v4 dipakai secara sengaja (kompatibel React 18 bawaan Breeze)  v5 butuh React 19 dan
 akan konflik.
 
 ### 5. Setup environment
@@ -136,7 +136,7 @@ php artisan make:migration create_data_ingestion_logs_table
 
 Isi setiap file migration sesuai struktur kolom persis di `docs/Schema.md` §1–6.
 
-### 8. Generate service class (satu per sumber data eksternal — Rules.md §7)
+### 8. Generate service class (satu per sumber data eksternal  Rules.md §7)
 
 ```bash
 php artisan make:class Domains/FireMonitoring/Services/FirmsService
@@ -145,7 +145,7 @@ php artisan make:class Domains/FireMonitoring/Services/IqairService
 php artisan make:class Domains/FireMonitoring/Services/GoogleMapsLinkService
 ```
 
-Tidak boleh ada logic pemanggilan HTTP langsung di controller/job — selalu lewat Service class ini.
+Tidak boleh ada logic pemanggilan HTTP langsung di controller/job  selalu lewat Service class ini.
 
 ### 9. Generate job terjadwal & controller
 
@@ -159,17 +159,17 @@ php artisan make:controller RegionDetailController
 php artisan make:controller RegionCompareController
 ```
 
-### 10. Buat config threshold (Rules.md §2 & §7 — single source of truth)
+### 10. Buat config threshold (Rules.md §2 & §7  single source of truth)
 
 Buat `config/ember.php` berisi `gfw_risk_thresholds`, bobot Priority Score, TTL cache, dan
-`MITIGATION_CONTENT` — jangan hardcode magic number/teks berulang di controller atau frontend.
+`MITIGATION_CONTENT`  jangan hardcode magic number/teks berulang di controller atau frontend.
 
 ### 11. Data preparation GADM (satu kali, bukan job terjadwal)
 
 Unduh GeoJSON level-2 dari [gadm.org](https://gadm.org), ekstrak nama wilayah + hitung centroid
 geometris pakai `shapely`, lalu generate jadi `database/seeders/RegionSeeder.php`. Lihat
 `docs/Architecture.md` §3.4 untuk detail dan known limitation (5 kabupaten/kota Kalimantan Utara
-sempat ter-seed salah nama karena field `TYPE_2` kosong di source GADM — sudah diperbaiki manual).
+sempat ter-seed salah nama karena field `TYPE_2` kosong di source GADM  sudah diperbaiki manual).
 
 ### 12. Migrate & seed database
 
@@ -190,32 +190,32 @@ Schedule::job(new \App\Domains\FireMonitoring\Jobs\CalculateRegionPriorityJob)->
 Tiga terminal terpisah:
 
 ```bash
-php artisan serve          # Terminal 1 — Laravel server
-npm run dev                # Terminal 2 — Vite dev server
-php artisan schedule:work  # Terminal 3 — jalankan job terjadwal untuk testing
+php artisan serve          # Terminal 1  Laravel server
+npm run dev                # Terminal 2  Vite dev server
+php artisan schedule:work  # Terminal 3  jalankan job terjadwal untuk testing
 ```
 
 ---
 
 ## Deployment (Production)
 
-- `QUEUE_CONNECTION=sync` — tidak butuh queue worker terpisah.
+- `QUEUE_CONNECTION=sync`  tidak butuh queue worker terpisah.
 - **Wajib** ada akses Cron Job di hosting. Tambahkan satu baris:
   ```
   * * * * * cd /path-to-ember && php artisan schedule:run >> /dev/null 2>&1
   ```
-- Cek dukungan cron di plan hosting **sebelum** memilih provider — sebagian shared hosting tidak
+- Cek dukungan cron di plan hosting **sebelum** memilih provider  sebagian shared hosting tidak
   menyediakan akses cron per-menit.
 - Semua API key (FIRMS, GFW, IQAir) disimpan di `.env`, tidak pernah di-commit atau diekspos ke
   frontend.
 
 ## Arsitektur Singkat
 
-- **Cache-first** — tidak ada pemanggilan live ke API eksternal saat halaman dibuka; semua data
+- **Cache-first**  tidak ada pemanggilan live ke API eksternal saat halaman dibuka; semua data
   diambil scheduled job dan disajikan dari database lokal.
-- **Service per sumber data** — tiap API eksternal (`FirmsService`, `GfwService`, `IqairService`)
+- **Service per sumber data**  tiap API eksternal (`FirmsService`, `GfwService`, `IqairService`)
   punya class sendiri, mudah diuji/diganti.
-- **Graceful degradation** — kegagalan satu sumber data tidak menggagalkan seluruh halaman;
+- **Graceful degradation**  kegagalan satu sumber data tidak menggagalkan seluruh halaman;
   ditampilkan sebagai "data tidak tersedia" (null ≠ 0, lihat `docs/Rules.md` §2).
 
 ## Keterbatasan yang Diketahui
@@ -223,7 +223,7 @@ php artisan schedule:work  # Terminal 3 — jalankan job terjadwal untuk testing
 - Skor risiko adalah **proksi statistik** dari data deforestasi historis (tree cover loss GFW),
   bukan prediksi resmi lembaga pemerintah.
 - Threshold kategori risiko diturunkan dari sampel 20 titik koordinat di area rawan karhutla
-  Kalimantan dan Sumatra (19 titik valid, min 0.43%, max 24.37%, rata-rata 11.79%) — dapat
+  Kalimantan dan Sumatra (19 titik valid, min 0.43%, max 24.37%, rata-rata 11.79%)  dapat
   diperbarui dengan sampel lebih besar (50–100+ titik) pada iterasi berikutnya.
 - Reverse-lookup hotspot ke wilayah menggunakan pendekatan nearest-centroid (Haversine), bukan
   point-in-polygon presisi terhadap batas administratif asli.
@@ -232,17 +232,17 @@ Detail lengkap metodologi dan keterbatasan ada di halaman `/about` aplikasi dan 
 
 ## Dokumentasi Teknis
 
-- [`docs/Architecture.md`](docs/Architecture.md) — stack, alur data, struktur proyek
-- [`docs/Rules.md`](docs/Rules.md) — formula skoring, aturan bisnis, konvensi kode
-- [`docs/Schema.md`](docs/Schema.md) — struktur database
-- [`docs/Design.md`](docs/Design.md) — positioning, palet warna, struktur halaman
+- [`docs/Architecture.md`](docs/Architecture.md)  stack, alur data, struktur proyek
+- [`docs/Rules.md`](docs/Rules.md)  formula skoring, aturan bisnis, konvensi kode
+- [`docs/Schema.md`](docs/Schema.md)  struktur database
+- [`docs/Design.md`](docs/Design.md)  positioning, palet warna, struktur halaman
 
 ## Atribusi & Lisensi
 
 Data hotspot: NASA FIRMS · Data risiko deforestasi: Global Forest Watch · Data kualitas udara:
 IQAir · Batas wilayah administratif: GADM v4.1.
 
-Dibangun dengan Laravel, React, Inertia.js, Tailwind CSS, dan Leaflet.js — lisensi masing-masing
+Dibangun dengan Laravel, React, Inertia.js, Tailwind CSS, dan Leaflet.js  lisensi masing-masing
 mengikuti proyek open-source terkait.
 
 ## Tim

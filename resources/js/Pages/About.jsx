@@ -15,6 +15,7 @@ import {
     Users,
     GraduationCap,
 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
@@ -26,47 +27,19 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
     visible: { transition: { staggerChildren, delayChildren } },
 });
 
-const DATA_SOURCES = [
-    {
-        icon: Satellite,
-        name: 'NASA FIRMS',
-        role: 'Titik panas (hotspot) kebakaran',
-        description:
-            'Deteksi titik panas near real-time dari sensor satelit MODIS dan VIIRS, diambil untuk seluruh wilayah Indonesia setiap 6 jam.',
-    },
-    {
-        icon: TreeDeciduous,
-        name: 'Global Forest Watch',
-        role: 'Proksi skor risiko karhutla',
-        description:
-            'Data tree cover loss (Hansen/GLAD) dalam radius 5 km di sekitar tiap hotspot, dipakai sebagai indikator riwayat deforestasi di area tersebut.',
-    },
-    {
-        icon: Wind,
-        name: 'IQAir AirVisual',
-        role: 'Kualitas udara',
-        description:
-            'AQI kota terdekat, diambil untuk wilayah dengan kategori risiko tinggi/sangat tinggi dan untuk lokasi yang dicek pengguna.',
-    },
-    {
-        icon: MapPinned,
-        name: 'GADM v4.1',
-        role: 'Batas wilayah administratif',
-        description:
-            '502 kabupaten/kota se-Indonesia, dipakai sebagai unit agregasi untuk Ranking Wilayah Prioritas.',
-    },
-    {
-        icon: LifeBuoy,
-        name: 'BNPB',
-        role: 'Panduan kesiapsiagaan & mitigasi',
-        description:
-            'Konten rekomendasi kesiapsiagaan karhutla dikurasi dari siaran pers dan imbauan resmi BNPB, dipetakan ke kategori risiko wilayah/lokasi. Ini konten statis yang dikurasi tim, bukan panggilan API real-time ke BNPB.',
-    },
+// Urutan & ikon sumber data tetap; nama/peran/deskripsi diambil dari
+// kamus terjemahan (about.dataSourcesList.*) supaya konsisten ID/EN.
+const DATA_SOURCE_KEYS = [
+    { key: 'firms', icon: Satellite },
+    { key: 'gfw', icon: TreeDeciduous },
+    { key: 'iqair', icon: Wind },
+    { key: 'gadm', icon: MapPinned },
+    { key: 'bnpb', icon: LifeBuoy },
 ];
 
+// Data tim & threshold bersifat faktual (bukan teks UI), tidak diterjemahkan.
 const SUPERVISOR = {
     name: 'Siti Maesaroh, S.Kom., M.T.I.',
-    title: 'Dosen Pembimbing',
     affiliation: 'Universitas Mercu Buana',
 };
 
@@ -96,9 +69,24 @@ function SectionHeading({ icon: Icon, iconClass, bgClass, children }) {
 }
 
 export default function About() {
+    const { t } = useLanguage();
+
+    const limitationItems = [
+        <>
+            {t('about.sections.limitations.item1Prefix')}
+            <strong className="text-ink">{t('about.sections.limitations.item1Bold')}</strong>
+            {t('about.sections.limitations.item1Suffix')}
+        </>,
+        <>{t('about.sections.limitations.item2')}</>,
+        <>{t('about.sections.limitations.item3')}</>,
+        <>{t('about.sections.limitations.item4')}</>,
+        <>{t('about.sections.limitations.item5')}</>,
+        <>{t('about.sections.limitations.item6')}</>,
+    ];
+
     return (
         <AppLayout
-            title="Metodologi"
+            title={t('about.pageTitle')}
             active="about"
             mainClassName="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10"
         >
@@ -112,24 +100,22 @@ export default function About() {
                 <div className="pointer-events-none absolute top-96 -left-16 -z-10 h-64 w-64 rounded-full bg-fresh/[0.05] blur-3xl" />
 
                 <motion.div variants={fadeUp} className="mb-10">
-                    <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">Metodologi</h1>
+                    <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">{t('about.title')}</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink/70">
-                        EMBER menggabungkan tiga sumber data resmi menjadi satu skor prioritas yang mudah
-                        dipahami. Halaman ini menjelaskan dari mana setiap angka berasal, bagaimana skor
-                        dihitung, dan keterbatasan yang perlu diketahui saat membaca data di platform ini.
+                        {t('about.intro')}
                     </p>
                 </motion.div>
 
                 <motion.section variants={fadeUp} className="mb-10">
                     <SectionHeading icon={Satellite} iconClass="text-forest-dark" bgClass="bg-forest/10">
-                        Sumber Data
+                        {t('about.sections.dataSources.heading')}
                     </SectionHeading>
                     <motion.div
                         variants={staggerContainer(0.08)}
                         className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                     >
-                        {DATA_SOURCES.map((source) => (
-                            <motion.div key={source.name} variants={fadeUp}>
+                        {DATA_SOURCE_KEYS.map((source) => (
+                            <motion.div key={source.key} variants={fadeUp}>
                                 <Card className="h-full border-black/5 shadow-sm transition-shadow hover:shadow-md">
                                     <CardContent className="p-4 sm:p-5">
                                         <div className="mb-3 flex items-center gap-2.5">
@@ -138,13 +124,15 @@ export default function About() {
                                             </span>
                                             <div>
                                                 <p className="font-heading text-sm font-semibold text-ink">
-                                                    {source.name}
+                                                    {t(`about.dataSourcesList.${source.key}.name`)}
                                                 </p>
-                                                <p className="text-xs text-ink/50">{source.role}</p>
+                                                <p className="text-xs text-ink/50">
+                                                    {t(`about.dataSourcesList.${source.key}.role`)}
+                                                </p>
                                             </div>
                                         </div>
                                         <p className="text-sm leading-relaxed text-ink/70">
-                                            {source.description}
+                                            {t(`about.dataSourcesList.${source.key}.description`)}
                                         </p>
                                     </CardContent>
                                 </Card>
@@ -155,29 +143,23 @@ export default function About() {
 
                 <motion.section variants={fadeUp} className="mb-10">
                     <SectionHeading icon={ScaleIcon} iconClass="text-forest-dark" bgClass="bg-forest/10">
-                        Cara Skor Risiko Dihitung
+                        {t('about.sections.calculation.heading')}
                     </SectionHeading>
 
                     <Card className="mb-4 border-black/5 shadow-sm">
                         <CardContent className="space-y-3 p-4 text-sm leading-relaxed text-ink/70 sm:p-5">
                             <p>
-                                Global Forest Watch tidak menyediakan skor risiko prediktif per titik.
-                                Sebagai gantinya, EMBER menurunkan skor risiko dari{' '}
-                                <strong className="text-ink">persentase tree cover loss historis</strong>{' '}
-                                dalam radius 5 km di sekitar tiap titik hotspot — semakin tinggi
-                                deforestasi historis di sekitar suatu titik, semakin tinggi skor risiko
-                                karhutla berulang di area tersebut.
+                                {t('about.sections.calculation.p1Prefix')}
+                                <strong className="text-ink">{t('about.sections.calculation.p1Bold')}</strong>
+                                {t('about.sections.calculation.p1Suffix')}
                             </p>
                             <p className="overflow-x-auto rounded-lg bg-canvas px-4 py-3 font-mono text-xs text-ink/80">
-                                risk_score = min(loss_percentage / 35, 1)
+                                {t('about.sections.calculation.formula')}
                             </p>
                             <p>
-                                Angka <strong className="text-ink">35%</strong> adalah skala maksimum,
-                                ditentukan dari nilai tertinggi yang teramati pada sampel pengujian awal
-                                (33,88%, dibulatkan ke atas untuk memberi ruang toleransi). Radius 5 km
-                                dipilih setelah pengujian empiris terhadap radius 3 km, 5 km, dan 10 km —
-                                memberi keseimbangan terbaik antara konteks area sekitar dan daya pembeda
-                                antar wilayah.
+                                {t('about.sections.calculation.p2Prefix')}
+                                <strong className="text-ink">{t('about.sections.calculation.p2Bold')}</strong>
+                                {t('about.sections.calculation.p2Suffix')}
                             </p>
                         </CardContent>
                     </Card>
@@ -185,15 +167,15 @@ export default function About() {
                     <Card className="border-black/5 shadow-sm">
                         <CardContent className="p-4 sm:p-5">
                             <p className="mb-3 text-xs font-medium text-ink/50">
-                                Ambang batas kategori risiko
+                                {t('about.sections.calculation.thresholdsCaption')}
                             </p>
                             <div className="overflow-x-auto rounded-lg border border-black/5">
                                 <table className="w-full min-w-[420px] text-sm">
                                     <thead className="bg-canvas/70 text-left text-xs uppercase tracking-wide text-ink/40">
                                         <tr>
-                                            <th className="px-4 py-2.5">Kategori</th>
-                                            <th className="px-4 py-2.5">Tree cover loss</th>
-                                            <th className="px-4 py-2.5">Skor</th>
+                                            <th className="px-4 py-2.5">{t('about.thresholds.category')}</th>
+                                            <th className="px-4 py-2.5">{t('about.thresholds.treeCoverLoss')}</th>
+                                            <th className="px-4 py-2.5">{t('about.thresholds.score')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-black/5">
@@ -214,9 +196,8 @@ export default function About() {
                                 </table>
                             </div>
                             <p className="mt-3 text-xs leading-relaxed text-ink/50">
-                                Titik dengan kategori{' '}
-                                <RiskBadge category="na" className="mx-1 align-middle" />
-                                berarti data GFW gagal diambil — bukan risiko nol.
+                                <RiskBadge category="na" className="mr-1 align-middle" />
+                                {t('about.sections.calculation.naNote')}
                             </p>
                         </CardContent>
                     </Card>
@@ -224,25 +205,15 @@ export default function About() {
 
                 <motion.section variants={fadeUp} className="mb-10">
                     <SectionHeading icon={ScaleIcon} iconClass="text-fresh" bgClass="bg-fresh/10">
-                        Skor Prioritas Wilayah
+                        {t('about.sections.priorityScore.heading')}
                     </SectionHeading>
                     <Card className="border-black/5 shadow-sm">
                         <CardContent className="space-y-3 p-4 text-sm leading-relaxed text-ink/70 sm:p-5">
-                            <p>
-                                Setiap wilayah kabupaten/kota mendapat satu skor prioritas harian, gabungan
-                                dari tiga komponen:
-                            </p>
+                            <p>{t('about.sections.priorityScore.p1')}</p>
                             <p className="overflow-x-auto rounded-lg bg-canvas px-4 py-3 font-mono text-xs text-ink/80">
-                                Priority_Score = 0.4 × Risiko GFW + 0.4 × Frekuensi Hotspot + 0.2 × Dampak
-                                AQI
+                                {t('about.sections.priorityScore.formula')}
                             </p>
-                            <p>
-                                Risiko deforestasi historis dan frekuensi hotspot riil diberi bobot setara
-                                sebagai indikator utama karena keduanya data primer yang langsung terkait
-                                kejadian karhutla. AQI diberi bobot lebih rendah karena merupakan indikator
-                                dampak sekunder — dipengaruhi banyak faktor lain di luar karhutla, seperti
-                                kendaraan dan industri.
-                            </p>
+                            <p>{t('about.sections.priorityScore.p2')}</p>
                         </CardContent>
                     </Card>
                 </motion.section>
@@ -253,7 +224,7 @@ export default function About() {
                         iconClass="text-risk-tinggi"
                         bgClass="bg-risk-tinggi/10"
                     >
-                        Keterbatasan Data
+                        {t('about.sections.limitations.heading')}
                     </SectionHeading>
                     <Card className="border-black/5 shadow-sm">
                         <CardContent className="p-4 sm:p-5">
@@ -261,38 +232,7 @@ export default function About() {
                                 variants={staggerContainer(0.06)}
                                 className="space-y-2.5 text-sm leading-relaxed text-ink/70"
                             >
-                                {[
-                                    <>
-                                        Skor risiko adalah <strong className="text-ink">proksi</strong>{' '}
-                                        berbasis data deforestasi historis, bukan prediksi resmi dari
-                                        lembaga pemerintah.
-                                    </>,
-                                    <>
-                                        Analisis dilakukan dalam radius 5 km di sekitar tiap titik hotspot,
-                                        sehingga tidak mencerminkan kondisi persis di satu titik koordinat.
-                                    </>,
-                                    <>
-                                        Data satelit (FIRMS) berpotensi mengalami delay dan tertutup awan,
-                                        sehingga tidak semua titik api aktual terdeteksi.
-                                    </>,
-                                    <>
-                                        Ambang batas kategori risiko dihitung dari sampel awal 20 titik
-                                        hotspot asli, belum tervalidasi dengan sampel yang lebih besar
-                                        (50–100+ titik).
-                                    </>,
-                                    <>
-                                        Penetapan wilayah pada tiap hotspot memakai pendekatan titik pusat
-                                        terdekat (nearest-centroid), bukan batas wilayah presisi — titik
-                                        yang sangat dekat garis batas dua wilayah berpotensi salah assign.
-                                    </>,
-                                    <>
-                                        Panduan kesiapsiagaan yang ditampilkan bersifat umum dan dikurasi
-                                        dari imbauan resmi BNPB serta standar AQI US EPA — bukan peringatan
-                                        dini (early warning) real-time dari BNPB/BPBD, dan tidak
-                                        menggantikan arahan resmi dari petugas setempat saat kondisi
-                                        darurat.
-                                    </>,
-                                ].map((point, i) => (
+                                {limitationItems.map((point, i) => (
                                     <motion.li
                                         key={i}
                                         variants={fadeUp}
@@ -309,33 +249,23 @@ export default function About() {
 
                 <motion.section variants={fadeUp} className="mb-10">
                     <SectionHeading icon={ShieldCheck} iconClass="text-forest-dark" bgClass="bg-forest/10">
-                        Netralitas Platform
+                        {t('about.sections.neutrality.heading')}
                     </SectionHeading>
                     <Card className="border-black/5 bg-forest-dark/[0.03] shadow-sm">
                         <CardContent className="p-4 text-sm leading-relaxed text-ink/70 sm:p-5">
-                            <p>
-                                EMBER adalah platform data-driven, bukan platform advokasi kebijakan. Semua
-                                klaim didasarkan pada data resmi yang dapat diverifikasi dan tidak mengambil
-                                posisi politis terhadap kebijakan pemerintah atau industri tertentu.
-                                Rekomendasi yang ditampilkan bersifat umum dan defensif secara
-                                keselamatan/kesehatan (misalnya mengurangi aktivitas luar ruangan), bukan
-                                rekomendasi kebijakan spesifik.
-                            </p>
+                            <p>{t('about.sections.neutrality.text')}</p>
                         </CardContent>
                     </Card>
                 </motion.section>
 
                 <motion.section variants={fadeUp} className="mb-10">
                     <SectionHeading icon={Users} iconClass="text-forest-dark" bgClass="bg-forest/10">
-                        Tim Pengembang
+                        {t('about.sections.team.heading')}
                     </SectionHeading>
                     <Card className="border-black/5 shadow-sm">
                         <CardContent className="p-4 sm:p-5">
                             <p className="mb-5 text-sm leading-relaxed text-ink/70">
-                                EMBER dikembangkan oleh tim mahasiswa untuk International Web Technology
-                                Competition — Gayatama 5 (UNESA), didorong oleh keresahan atas dampak
-                                karhutla yang berulang setiap musim kemarau namun datanya tersebar di
-                                berbagai sumber resmi yang sulit diakses bersama oleh warga umum.
+                                {t('about.sections.team.intro')}
                             </p>
 
                             <div className="mb-5 flex items-center gap-3 rounded-lg bg-canvas px-4 py-3">
@@ -344,7 +274,7 @@ export default function About() {
                                 </span>
                                 <div>
                                     <p className="text-xs font-medium uppercase tracking-wide text-ink/40">
-                                        {SUPERVISOR.title}
+                                        {t('about.sections.team.supervisorTitle')}
                                     </p>
                                     <p className="font-heading text-sm font-semibold text-ink">
                                         {SUPERVISOR.name}
@@ -354,7 +284,7 @@ export default function About() {
                             </div>
 
                             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-ink/40">
-                                Anggota Tim
+                                {t('about.sections.team.membersLabel')}
                             </p>
                             <motion.div
                                 variants={staggerContainer(0.08)}

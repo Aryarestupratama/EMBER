@@ -10,7 +10,7 @@ class RegionSeeder extends Seeder
     /**
      * Data wilayah administratif (kabupaten/kota) se-Indonesia,
      * bersumber dari GADM (Database of Global Administrative Areas)
-     * versi 4.1, level Adm2 — https://gadm.org
+     * versi 4.1, level Adm2  https://gadm.org
      *
      * Centroid dihitung dari centroid geometris tiap polygon batas
      * wilayah resmi GADM. Total 502 kabupaten/kota.
@@ -258,7 +258,7 @@ class RegionSeeder extends Seeder
             // 5 baris berikut awalnya bernilai 'NA {nama}' dengan slug 4-segmen
             // (mis. 'na-bulungan-idn-35-4') karena kolom TYPE_2 kosong pada
             // source GeoJSON GADM v4.1 khusus untuk Kalimantan Utara (provinsi
-            // termuda, dimekarkan dari Kalimantan Timur 2012 — kemungkinan
+            // termuda, dimekarkan dari Kalimantan Timur 2012  kemungkinan
             // metadata belum selengkap provinsi lain). Nama & slug diperbaiki
             // manual berdasar tipe wilayah administratif yang sudah diketahui;
             // koordinat/luas asli dari GADM tidak diubah.

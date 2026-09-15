@@ -106,7 +106,7 @@ class AreaCheckController extends Controller
 
     /**
      * Cari hotspot dalam radius tertentu menggunakan Haversine
-     * (query lokal, bukan panggilan API — sesuai prinsip cache-first).
+     * (query lokal, bukan panggilan API  sesuai prinsip cache-first).
      */
     protected function findNearbyHotspots(float $lat, float $lon, int $radiusKm)
     {

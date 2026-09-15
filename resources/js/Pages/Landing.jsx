@@ -13,6 +13,7 @@ import {
     Wind,
     Leaf,
 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -29,32 +30,13 @@ const HERO_TEXT_TO = '#E85D04';
 const HERO_BUTTON_FROM = '#40916C';
 const HERO_BUTTON_TO = '#E85D04';
 
-const HOW_IT_WORKS_STEPS = [
-    {
-        step: '1. Monitor',
-        image: '/assets/features/feature-monitor.png',
-        title: 'Titik Panas Real-time',
-        description:
-            'Data hotspot dari satelit NASA FIRMS, diperbarui otomatis setiap 6 jam untuk seluruh wilayah Indonesia.',
-        accent: 'tinggi',
-    },
-    {
-        step: '2. Analisis',
-        image: '/assets/features/feature-analisis.png',
-        title: 'Skor Risiko Berbasis Data',
-        description:
-            'Tiap titik dianalisis menggunakan data deforestasi historis dari Global Forest Watch untuk menentukan tingkat risiko.',
-        accent: 'sedang',
-    },
-    {
-        step: '3. Bertindak',
-        image: '/assets/features/feature-bertindak.png',
-        title: 'Rekomendasi & Cek Lokasi',
-        description:
-            'Lihat wilayah prioritas nasional, atau cek kondisi kualitas udara dan risiko di lokasi kamu sendiri.',
-        accent: 'fresh',
-    },
-];
+const STEP_KEYS = ['monitor', 'analyze', 'act'];
+const ACCENT_BY_STEP = { monitor: 'tinggi', analyze: 'sedang', act: 'fresh' };
+const IMAGE_BY_STEP = {
+    monitor: '/assets/features/feature-monitor.png',
+    analyze: '/assets/features/feature-analisis.png',
+    act: '/assets/features/feature-bertindak.png',
+};
 
 const ACCENT_CLASSES = {
     tinggi: { badge: 'bg-risk-tinggi/10 text-risk-tinggi', blob: 'bg-risk-tinggi/10', ring: 'ring-risk-tinggi/20' },
@@ -67,6 +49,7 @@ const ACCENT_CLASSES = {
 };
 
 export default function Landing({ stats, previewHotspots }) {
+    const { t, localeCode } = useLanguage();
     const heroRef = useRef(null);
     const { scrollYProgress: heroProgress } = useScroll({
         target: heroRef,
@@ -80,9 +63,22 @@ export default function Landing({ stats, previewHotspots }) {
         clamp: true,
     });
 
+    const formatUpdatedAt = (isoString) => {
+        const date = new Date(isoString);
+        return (
+            date.toLocaleString(localeCode, {
+                timeZone: 'Asia/Jakarta',
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+            }) + ' WIB'
+        );
+    };
+
     return (
         <AppLayout
-            title="EMBER — Monitoring Karhutla Indonesia"
+            title={t('landing.pageTitle')}
             transparentNav
             showFooter
             footerDark
@@ -101,25 +97,24 @@ export default function Landing({ stats, previewHotspots }) {
                     >
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fresh-light" />
                         {stats?.data_updated_at
-                            ? `Data terakhir diperbarui ${formatUpdatedAt(stats.data_updated_at)}`
-                            : 'Data belum tersedia'}
+                            ? t('landing.badge.updated', { time: formatUpdatedAt(stats.data_updated_at) })
+                            : t('landing.badge.unavailable')}
                     </motion.span>
 
                     <motion.h1
                         variants={fadeUp}
                         className="font-heading text-3xl font-bold leading-tight text-white [text-shadow:0_2px_16px_rgb(0_0_0_/_55%)] sm:text-4xl lg:text-5xl"
                     >
-                        Pantau Karhutla{' '}
-                        <motion.span style={{ color: indonesiaColor }}>Indonesia</motion.span>, Berbasis Data.
+                        {t('landing.hero.titlePrefix')}
+                        <motion.span style={{ color: indonesiaColor }}>{t('landing.hero.titleHighlight')}</motion.span>
+                        {t('landing.hero.titleSuffix')}
                     </motion.h1>
 
                     <motion.p
                         variants={fadeUp}
                         className="mx-auto mt-5 max-w-md text-sm text-white/90 [text-shadow:0_1px_10px_rgb(0_0_0_/_50%)] sm:text-base"
                     >
-                        EMBER menggabungkan data satelit NASA FIRMS, analisis deforestasi Global Forest Watch,
-                        dan kualitas udara IQAir menjadi satu skor prioritas — supaya siapa saja bisa memahami
-                        risiko karhutla di sekitar mereka.
+                        {t('landing.hero.description')}
                     </motion.p>
 
                     <motion.div
@@ -136,7 +131,7 @@ export default function Landing({ stats, previewHotspots }) {
                             className="h-12 w-full bg-[var(--hero-btn-color)] px-6 text-sm transition-[filter] hover:brightness-90 sm:h-14 sm:w-auto sm:px-8 sm:text-base"
                         >
                             <MapPin className="h-5 w-5" />
-                            Cek Daerah Kamu
+                            {t('landing.hero.ctaCheckArea')}
                         </Button>
                     </motion.div>
                 </motion.div>
@@ -159,36 +154,35 @@ export default function Landing({ stats, previewHotspots }) {
                             className="inline-flex items-center gap-1.5 rounded-full bg-risk-tinggi/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-risk-tinggi"
                         >
                             <AlertTriangle className="h-3.5 w-3.5" />
-                            Masalah Nyata
+                            {t('landing.problem.badge')}
                         </motion.span>
 
                         <motion.h2
                             variants={fadeUp}
                             className="mt-4 font-heading text-2xl font-bold leading-tight text-ink sm:text-3xl"
                         >
-                            Karhutla Terjadi Berulang, Setiap Musim Kemarau
+                            {t('landing.problem.title')}
                         </motion.h2>
 
                         <motion.p variants={fadeUp} className="mt-4 max-w-lg text-sm leading-relaxed text-ink/60">
-                            Kebakaran hutan dan lahan bukan cuma soal asap sesaat — dampaknya menumpuk tiap tahun
-                            dan melampaui kehilangan tutupan hutan saja.
+                            {t('landing.problem.description')}
                         </motion.p>
 
                         <div className="mt-8 space-y-5">
                             <ImpactRow
                                 icon={<Wind className="h-4 w-4" />}
-                                title="Kualitas Udara Memburuk"
-                                description="Asap karhutla menyebar lintas wilayah dan menurunkan kualitas udara yang dihirup warga sekitar."
+                                title={t('landing.problem.impact.airQuality.title')}
+                                description={t('landing.problem.impact.airQuality.description')}
                             />
                             <ImpactRow
                                 icon={<Leaf className="h-4 w-4" />}
-                                title="Keanekaragaman Hayati Terancam"
-                                description="Habitat flora dan fauna ikut hilang bersamaan dengan tutupan hutan yang terbakar."
+                                title={t('landing.problem.impact.biodiversity.title')}
+                                description={t('landing.problem.impact.biodiversity.description')}
                             />
                             <ImpactRow
                                 icon={<Flame className="h-4 w-4" />}
-                                title="Berulang Setiap Tahun"
-                                description="Tanpa pemantauan dini, titik-titik rawan yang sama cenderung terbakar kembali musim berikutnya."
+                                title={t('landing.problem.impact.recurring.title')}
+                                description={t('landing.problem.impact.recurring.description')}
                             />
                         </div>
                     </div>
@@ -199,13 +193,13 @@ export default function Landing({ stats, previewHotspots }) {
                     >
                         <StatBlock
                             icon={<Flame className="h-5 w-5" />}
-                            value={stats?.total_hotspots ?? '—'}
-                            label="Titik panas terdeteksi hari ini"
+                            value={stats?.total_hotspots ?? ''}
+                            label={t('landing.problem.statHotspotsToday')}
                         />
                         <StatBlock
                             icon={<AlertTriangle className="h-5 w-5" />}
-                            value={stats?.high_risk_regions ?? '—'}
-                            label="Wilayah berstatus risiko tinggi"
+                            value={stats?.high_risk_regions ?? ''}
+                            label={t('landing.problem.statHighRiskRegions')}
                             accent
                         />
                     </motion.div>
@@ -222,15 +216,15 @@ export default function Landing({ stats, previewHotspots }) {
                         <div className="flex flex-col gap-2 border-b border-black/5 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
                             <div>
                                 <h3 className="font-heading text-sm font-semibold text-ink">
-                                    Peta Titik Panas Nasional
+                                    {t('landing.mapPreview.title')}
                                 </h3>
                                 <p className="mt-0.5 text-xs text-ink/50">
-                                    Preview titik panas terdeteksi hari ini di seluruh Indonesia
+                                    {t('landing.mapPreview.description')}
                                 </p>
                             </div>
                             <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-risk-tinggi/10 px-2.5 py-1 text-xs font-medium text-risk-tinggi">
                                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-risk-tinggi" />
-                                Live
+                                {t('landing.mapPreview.live')}
                             </span>
                         </div>
                         <div className="h-[280px] w-full sm:h-[360px] lg:h-[420px]">
@@ -244,14 +238,13 @@ export default function Landing({ stats, previewHotspots }) {
                 <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
                     <div className="mx-auto max-w-xl text-center">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-forest-dark/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-forest-dark">
-                            Cara Kerja
+                            {t('landing.howItWorks.badge')}
                         </span>
                         <h2 className="mt-4 font-heading text-2xl font-bold text-ink sm:text-3xl">
-                            Sederhana, Tapi Menyeluruh
+                            {t('landing.howItWorks.title')}
                         </h2>
                         <p className="mt-3 text-sm text-ink/60">
-                            Tiga langkah dari data mentah satelit sampai rekomendasi yang bisa langsung kamu
-                            pakai.
+                            {t('landing.howItWorks.description')}
                         </p>
                     </div>
 
@@ -264,8 +257,16 @@ export default function Landing({ stats, previewHotspots }) {
                     >
                         <div className="pointer-events-none absolute inset-x-[12%] top-6 hidden border-t-2 border-dashed border-forest-dark/15 md:block" />
 
-                        {HOW_IT_WORKS_STEPS.map((item, index) => (
-                            <HowItWorksStep key={item.step} {...item} number={index + 1} />
+                        {STEP_KEYS.map((key, index) => (
+                            <HowItWorksStep
+                                key={key}
+                                image={IMAGE_BY_STEP[key]}
+                                step={t(`landing.howItWorks.steps.${key}.step`)}
+                                title={t(`landing.howItWorks.steps.${key}.title`)}
+                                description={t(`landing.howItWorks.steps.${key}.description`)}
+                                accent={ACCENT_BY_STEP[key]}
+                                number={index + 1}
+                            />
                         ))}
                     </motion.div>
                 </div>
@@ -282,21 +283,20 @@ export default function Landing({ stats, previewHotspots }) {
                     className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 sm:py-14"
                 >
                     <motion.h2 variants={fadeUp} className="font-heading text-xl font-bold text-ink sm:text-2xl">
-                        Data dari Sumber Tepercaya
+                        {t('landing.dataSources.title')}
                     </motion.h2>
                     <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-lg text-sm text-ink/60">
-                        EMBER tidak membuat data sendiri — semuanya diagregasi dari sumber resmi yang dapat
-                        diverifikasi.
+                        {t('landing.dataSources.description')}
                     </motion.p>
 
                     <motion.div
                         variants={staggerContainer(0.08)}
                         className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
                     >
-                        <SourceBlock name="NASA FIRMS" desc="Titik panas satelit VIIRS/MODIS" />
-                        <SourceBlock name="Global Forest Watch" desc="Data deforestasi historis" />
-                        <SourceBlock name="IQAir" desc="Kualitas udara real-time" />
-                        <SourceBlock name="GADM" desc="Batas wilayah administratif" />
+                        <SourceBlock name="NASA FIRMS" desc={t('landing.dataSources.firms')} />
+                        <SourceBlock name="Global Forest Watch" desc={t('landing.dataSources.gfw')} />
+                        <SourceBlock name="IQAir" desc={t('landing.dataSources.iqair')} />
+                        <SourceBlock name="GADM" desc={t('landing.dataSources.gadm')} />
                     </motion.div>
                 </motion.div>
             </section>
@@ -313,10 +313,10 @@ export default function Landing({ stats, previewHotspots }) {
                     className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 sm:py-14"
                 >
                     <motion.h2 variants={fadeUp} className="font-heading text-xl font-bold text-white sm:text-2xl">
-                        Mulai Pantau Wilayahmu Sekarang
+                        {t('landing.finalCta.title')}
                     </motion.h2>
                     <motion.p variants={fadeUp} className="mx-auto mt-2 max-w-md text-sm text-white/70">
-                        Data selalu terbuka untuk siapa saja — warga, peneliti, hingga pengambil kebijakan.
+                        {t('landing.finalCta.description')}
                     </motion.p>
                     <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-3">
                         <Button
@@ -327,7 +327,7 @@ export default function Landing({ stats, previewHotspots }) {
                             size="lg"
                             className="bg-white text-forest-dark hover:bg-white/90"
                         >
-                            Cek Daerah Kamu
+                            {t('landing.finalCta.checkAreaBtn')}
                             <ArrowRight className="h-4 w-4" />
                         </Button>
                         <Button
@@ -337,24 +337,13 @@ export default function Landing({ stats, previewHotspots }) {
                             variant="outline"
                             className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
                         >
-                            Buka Dashboard
+                            {t('landing.finalCta.openDashboardBtn')}
                         </Button>
                     </motion.div>
                 </motion.div>
             </section>
         </AppLayout>
     );
-}
-
-function formatUpdatedAt(isoString) {
-    const date = new Date(isoString);
-    return date.toLocaleString('id-ID', {
-        timeZone: 'Asia/Jakarta',
-        day: 'numeric',
-        month: 'long',
-        hour: '2-digit',
-        minute: '2-digit',
-    }) + ' WIB';
 }
 
 function StatBlock({ icon, value, label, accent = false }) {

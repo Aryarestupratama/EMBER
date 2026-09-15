@@ -2,43 +2,22 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
-const COMPONENTS = [
-    {
-        key: 'gfw_risk',
-        label: 'Risiko Deforestasi (GFW)',
-        weight: 0.4,
-        barClass: 'bg-forest-dark',
-        tooltip:
-            'Rata-rata persentase tutupan hutan yang hilang (tree cover loss) dalam radius 5 km di sekitar tiap hotspot wilayah ini sejak 2015, sebagai proksi risiko karhutla berulang — bukan prediksi resmi pemerintah.',
-    },
-    {
-        key: 'hotspot_frequency',
-        label: 'Frekuensi Hotspot',
-        weight: 0.4,
-        barClass: 'bg-fresh',
-        tooltip:
-            'Jumlah hotspot di wilayah ini dalam 7 hari terakhir, dinormalisasi relatif terhadap wilayah dengan jumlah hotspot terbanyak pada periode yang sama.',
-    },
-    {
-        key: 'aqi_impact',
-        label: 'Dampak Kualitas Udara',
-        weight: 0.2,
-        barClass: 'bg-fresh-light',
-        tooltip:
-            'Rata-rata AQI kota-kota terkait wilayah ini, dinormalisasi terhadap skala AQI US EPA (0–300). Diberi bobot lebih rendah karena AQI juga dipengaruhi faktor lain di luar karhutla, seperti kendaraan dan industri.',
-    },
+// Urutan & bobot komponen formula (Rules.md §3)  nilai numerik ini tetap,
+// hanya label & tooltip yang diambil dari kamus terjemahan.
+const COMPONENT_KEYS = [
+    { key: 'gfw_risk', weight: 0.4, barClass: 'bg-forest-dark' },
+    { key: 'hotspot_frequency', weight: 0.4, barClass: 'bg-fresh' },
+    { key: 'aqi_impact', weight: 0.2, barClass: 'bg-fresh-light' },
 ];
 
-const PRIORITY_SCORE_TOOLTIP =
-    'Jumlah terbobot dari tiga komponen di atas (0.4 × risiko deforestasi + 0.4 × frekuensi hotspot + 0.2 × dampak AQI). Semakin tinggi skor, semakin diprioritaskan wilayah ini untuk monitoring dan mitigasi.';
-
-function InfoTooltip({ text }) {
+function InfoTooltip({ text, ariaLabel }) {
     return (
         <Tooltip>
             <TooltipTrigger
                 className="text-ink/30 hover:text-ink/60 transition-colors"
-                aria-label="Penjelasan"
+                aria-label={ariaLabel}
             >
                 <Info className="size-3.5" />
             </TooltipTrigger>
@@ -50,11 +29,13 @@ function InfoTooltip({ text }) {
 }
 
 export default function ScoreBreakdown({ score }) {
+    const { t } = useLanguage();
+
     if (!score) {
         return (
             <Card className="border-black/5 shadow-sm">
                 <CardContent className="py-8 text-center text-sm text-ink/50">
-                    Belum ada perhitungan skor prioritas untuk wilayah ini.
+                    {t('scoreBreakdown.empty')}
                 </CardContent>
             </Card>
         );
@@ -74,11 +55,11 @@ export default function ScoreBreakdown({ score }) {
         <Card className="border-black/5 shadow-sm">
             <CardHeader className="border-b border-black/5 pb-3">
                 <CardTitle className="font-heading text-sm font-semibold text-ink">
-                    Kontribusi Skor Prioritas
+                    {t('scoreBreakdown.title')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-                {COMPONENTS.map((c, index) => {
+                {COMPONENT_KEYS.map((c, index) => {
                     const value = normalized[c.key];
                     const contribution = value * c.weight;
                     const unavailable =
@@ -89,9 +70,14 @@ export default function ScoreBreakdown({ score }) {
                         <div key={c.key}>
                             <div className="mb-1 flex items-baseline justify-between text-sm">
                                 <span className="flex items-center gap-1.5 text-ink/70">
-                                    {c.label}{' '}
-                                    <span className="text-xs text-ink/40">(bobot {c.weight})</span>
-                                    <InfoTooltip text={c.tooltip} />
+                                    {t(`scoreBreakdown.components.${c.key}.label`)}{' '}
+                                    <span className="text-xs text-ink/40">
+                                        {t('scoreBreakdown.weightLabel', { weight: c.weight })}
+                                    </span>
+                                    <InfoTooltip
+                                        text={t(`scoreBreakdown.components.${c.key}.tooltip`)}
+                                        ariaLabel={t('scoreBreakdown.infoAria')}
+                                    />
                                 </span>
                                 <span className="tabular-nums font-medium text-ink">
                                     {unavailable ? (
@@ -126,8 +112,11 @@ export default function ScoreBreakdown({ score }) {
 
                 <div className="flex items-baseline justify-between border-t border-black/5 pt-3 text-sm font-semibold">
                     <span className="flex items-center gap-1.5 text-ink">
-                        Priority Score
-                        <InfoTooltip text={PRIORITY_SCORE_TOOLTIP} />
+                        {t('scoreBreakdown.priorityScore')}
+                        <InfoTooltip
+                            text={t('scoreBreakdown.priorityScoreTooltip')}
+                            ariaLabel={t('scoreBreakdown.infoAria')}
+                        />
                     </span>
                     <span className="tabular-nums text-forest-dark">
                         {parseFloat(score.priority_score).toFixed(3)}

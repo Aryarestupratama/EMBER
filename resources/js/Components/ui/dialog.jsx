@@ -43,7 +43,7 @@ function DialogOverlay({
         // merender peta Leaflet, yang panel internalnya (.leaflet-pane,
         // dst) pakai z-index sampai 700. Backdrop di-portal ke document.body
         // jadi z-index-nya head-to-head langsung lawan panel Leaflet,
-        // bukan mengikuti urutan render DOM — kalau masih z-50, peta akan
+        // bukan mengikuti urutan render DOM  kalau masih z-50, peta akan
         // "menembus" backdrop gelap ini.
         "fixed inset-0 isolate z-[999] bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
@@ -67,7 +67,7 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           // z-[1000]: satu tingkat di atas DialogOverlay (z-[999]) supaya
-          // urutannya tetap benar — backdrop gelap dulu, baru konten modal
+          // urutannya tetap benar  backdrop gelap dulu, baru konten modal
           // di atasnya. Lihat catatan z-index di DialogOverlay soal Leaflet.
           "fixed top-1/2 left-1/2 z-[1000] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className

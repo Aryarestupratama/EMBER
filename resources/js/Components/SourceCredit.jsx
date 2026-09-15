@@ -1,9 +1,11 @@
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+
 export default function SourceCredit({ className = '' }) {
+    const { t } = useLanguage();
+
     return (
         <p className={`text-xs text-ink/50 ${className}`}>
-            Data hotspot: NASA FIRMS · Data risiko deforestasi: Global Forest Watch ·
-            Data kualitas udara: IQAir · Batas wilayah: GADM v4.1 · Panduan
-            kesiapsiagaan: BNPB
+            {t('footer.credit')}
         </p>
     );
 }

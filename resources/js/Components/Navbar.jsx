@@ -8,18 +8,21 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
 } from '@/components/ui/navigation-menu';
-
-const NAV_ITEMS = [
-    { route: 'dashboard', label: 'Dashboard' },
-    { route: 'area-check', label: 'Cek Daerah Kamu' },
-    { route: 'about', label: 'Metodologi' },
-];
+import LanguageToggle from '@/components/LanguageToggle';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function Navbar({ active = null, variant = 'solid' }) {
+    const { t } = useLanguage();
     const isTransparentVariant = variant === 'transparent';
     const [scrolled, setScrolled] = useState(false);
     const [hovered, setHovered] = useState(null);
     const [mobileOpen, setMobileOpen] = useState(false);
+
+    const NAV_ITEMS = [
+        { route: 'dashboard', label: t('nav.dashboard') },
+        { route: 'area-check', label: t('nav.areaCheck') },
+        { route: 'about', label: t('nav.about') },
+    ];
 
     useEffect(() => {
         setMobileOpen(false);
@@ -44,6 +47,7 @@ export default function Navbar({ active = null, variant = 'solid' }) {
         ? 'text-ink/70 hover:text-forest-dark'
         : 'text-white/85 hover:text-fresh-light';
     const pillClass = showSolidStyle ? 'bg-black/5' : 'bg-white/15 backdrop-blur-sm';
+    const toggleTone = showSolidStyle ? 'solid' : 'transparent';
 
     return (
         <header
@@ -88,19 +92,21 @@ export default function Navbar({ active = null, variant = 'solid' }) {
                     </NavigationMenuList>
                 </NavigationMenu>
 
-                <div className="hidden w-0 sm:block sm:w-[1px] md:hidden" aria-hidden="true" />
+                <div className="flex shrink-0 items-center gap-2">
+                    <LanguageToggle tone={toggleTone} className="hidden sm:inline-flex" />
 
-                <button
-                    type="button"
-                    onClick={() => setMobileOpen((v) => !v)}
-                    aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
-                    aria-expanded={mobileOpen}
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 md:hidden ${
-                        showSolidStyle ? 'text-ink/70 hover:bg-black/5' : 'text-white hover:bg-white/15'
-                    }`}
-                >
-                    {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => setMobileOpen((v) => !v)}
+                        aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+                        aria-expanded={mobileOpen}
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 md:hidden ${
+                            showSolidStyle ? 'text-ink/70 hover:bg-black/5' : 'text-white hover:bg-white/15'
+                        }`}
+                    >
+                        {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+                    </button>
+                </div>
             </div>
 
             <AnimatePresence>
@@ -127,6 +133,9 @@ export default function Navbar({ active = null, variant = 'solid' }) {
                                     {item.label}
                                 </Link>
                             ))}
+                            <div className="mt-2 border-t border-black/5 pt-3">
+                                <LanguageToggle tone="solid" />
+                            </div>
                         </div>
                     </motion.div>
                 )}

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('frp', 8, 2); // Fire Radiative Power
             $table->enum('daynight', ['D', 'N']);
 
-            // Dari Global Forest Watch (GFW) — tree cover loss sebagai proksi risiko
+            // Dari Global Forest Watch (GFW)  tree cover loss sebagai proksi risiko
             $table->decimal('gfw_risk_score', 8, 6)->nullable(); // null = gagal/tidak tersedia
             $table->enum('gfw_risk_category', [
                 'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'

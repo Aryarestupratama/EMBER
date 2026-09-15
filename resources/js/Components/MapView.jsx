@@ -102,7 +102,7 @@ const HOTSPOT_ICONS = {
 
 // Urutan severity untuk menentukan warna cluster: kalau sebuah cluster berisi
 // campuran kategori, warna bubble mengikuti kategori TERTINGGI di dalamnya
-// (prinsip "jangan menyembunyikan sinyal bahaya" — cluster tidak boleh
+// (prinsip "jangan menyembunyikan sinyal bahaya"  cluster tidak boleh
 // terlihat aman/hijau kalau ada 1 titik sangat_tinggi di dalamnya).
 const SEVERITY_ORDER = ['na', 'rendah', 'sedang', 'tinggi', 'sangat_tinggi'];
 

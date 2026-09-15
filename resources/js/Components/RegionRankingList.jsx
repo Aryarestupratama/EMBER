@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { GitCompareArrows, X } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function RegionRankingList({ regions, selected = [], onToggleSelect, onClearSelection }) {
+    const { t } = useLanguage();
     const [compareMode, setCompareMode] = useState(false);
 
     const startCompare = () => setCompareMode(true);
@@ -20,7 +22,7 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
         <Card className="border-black/5 shadow-sm">
             <CardHeader className="flex-row items-center justify-between border-b border-black/5 pb-3">
                 <CardTitle className="font-heading text-sm font-semibold text-ink">
-                    Wilayah Prioritas
+                    {t('regionRanking.title')}
                 </CardTitle>
 
                 {onToggleSelect && (
@@ -32,7 +34,7 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                             className="h-7 gap-1.5 px-2 text-xs text-ink/50 hover:text-ink"
                         >
                             <X className="size-3.5" />
-                            Batal
+                            {t('regionRanking.cancel')}
                         </Button>
                     ) : (
                         <Button
@@ -42,7 +44,7 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                             className="h-7 gap-1.5 px-2 text-xs text-forest-dark hover:bg-forest-dark/10 hover:text-forest-dark"
                         >
                             <GitCompareArrows className="size-3.5" />
-                            Bandingkan Wilayah
+                            {t('regionRanking.compareBtn')}
                         </Button>
                     )
                 )}
@@ -50,23 +52,14 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
 
             {compareMode && (
                 <div className="border-b border-black/5 bg-forest-dark/5 px-4 py-2 text-xs text-forest-dark">
-                    {selected.length >= 3 ? (
-                        <>
-                            Maksimum <span className="font-medium">3 wilayah</span> sekaligus. Hapus satu
-                            untuk memilih yang lain, atau klik <span className="font-medium">Bandingkan</span>.
-                        </>
-                    ) : (
-                        <>
-                            Pilih 2–3 wilayah di bawah, lalu klik <span className="font-medium">Bandingkan</span> yang muncul.
-                        </>
-                    )}
+                    {selected.length >= 3 ? t('regionRanking.maxHint', { max: 3 }) : t('regionRanking.chooseHint')}
                 </div>
             )}
 
             <CardContent className="space-y-0.5 p-2">
                 {regions.length === 0 && (
                     <p className="py-6 text-center text-sm text-ink/50">
-                        Belum ada data wilayah prioritas untuk hari ini.
+                        {t('regionRanking.empty')}
                     </p>
                 )}
 
@@ -87,8 +80,8 @@ export default function RegionRankingList({ regions, selected = [], onToggleSele
                                         checked={isSelected}
                                         disabled={disableUnselected}
                                         onCheckedChange={() => onToggleSelect(item.region.id)}
-                                        aria-label={`Pilih ${item.region.name} untuk dibandingkan`}
-                                        title={disableUnselected ? 'Maksimum 3 wilayah sekaligus' : undefined}
+                                        aria-label={t('regionRanking.selectAria', { name: item.region.name })}
+                                        title={disableUnselected ? t('regionRanking.maxTitle') : undefined}
                                     />
                                 )}
                                 <span className="tabular-nums w-5 text-sm font-medium text-ink/30">

@@ -8,6 +8,7 @@ import ScoreBreakdown from '@/components/ScoreBreakdown';
 import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Flame, Wind, CheckCircle2, ChevronDown } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const SEVERITY_ORDER = ['na', 'rendah', 'sedang', 'tinggi', 'sangat_tinggi'];
 
@@ -45,6 +46,7 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
 });
 
 export default function RegionDetail({ region, score, hotspots, mitigation }) {
+    const { t, localeCode } = useLanguage();
     const center = [parseFloat(region.centroid_lat), parseFloat(region.centroid_lon)];
 
     const groupedHotspots = useMemo(() => groupHotspotsByDate(hotspots), [hotspots]);
@@ -77,7 +79,7 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                         className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink/50 transition-colors hover:text-forest-dark"
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        Kembali ke Dashboard
+                        {t('regionDetail.backToDashboard')}
                     </Link>
                 </motion.div>
 
@@ -125,23 +127,25 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                                         icon={Flame}
                                         accentClass="border-risk-tinggi/15 bg-risk-tinggi/[0.04]"
                                         iconClass="text-risk-tinggi"
-                                        title="Panduan Kesiapsiagaan Karhutla"
-                                        points={mitigation.fire_risk.full_guidance}
+                                        title={t('regionDetail.fireGuidanceTitle')}
+                                        points={t(`mitigation.fireRisk.${mitigation.fire_risk.category ?? 'na'}.fullGuidance`)}
                                     />
 
-                                    {mitigation.air_quality?.full_guidance?.length > 0 && (
-                                        <GuidanceColumn
-                                            icon={Wind}
-                                            accentClass="border-fresh/15 bg-fresh/[0.04]"
-                                            iconClass="text-fresh"
-                                            title="Panduan Kualitas Udara"
-                                            points={mitigation.air_quality.full_guidance}
-                                        />
-                                    )}
+                                    <GuidanceColumn
+                                        icon={Wind}
+                                        accentClass="border-fresh/15 bg-fresh/[0.04]"
+                                        iconClass="text-fresh"
+                                        title={t('regionDetail.airGuidanceTitle')}
+                                        points={
+                                            mitigation.air_quality?.category
+                                                ? t(`mitigation.airQuality.${mitigation.air_quality.category}.fullGuidance`)
+                                                : t('mitigation.airQuality.unavailable.fullGuidance')
+                                        }
+                                    />
                                 </motion.div>
 
                                 <p className="mt-4 text-[11px] text-ink/40">
-                                    Sumber: BNPB (siaran pers resmi) · skala AQI mengacu standar AQI US EPA
+                                    {t('regionDetail.guidanceSource')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -151,13 +155,13 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                 <motion.div variants={fadeUp} className="mt-6">
                     <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-semibold text-ink">
                         <Flame className="h-4 w-4 text-risk-tinggi" />
-                        Hotspot 7 Hari Terakhir ({hotspots.length})
+                        {t('regionDetail.hotspotsHeading', { count: hotspots.length })}
                     </h2>
 
                     {hotspots.length === 0 ? (
                         <Card className="border-dashed border-black/5 shadow-none">
                             <CardContent className="py-8 text-center text-sm text-ink/50">
-                                Tidak ada hotspot tercatat di wilayah ini dalam 7 hari terakhir.
+                                {t('regionDetail.noHotspots')}
                             </CardContent>
                         </Card>
                     ) : (
@@ -182,14 +186,14 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                                                     }`}
                                                 />
                                                 <span className="text-sm font-medium text-ink">
-                                                    {new Date(group.date).toLocaleDateString('id-ID', {
+                                                    {new Date(group.date).toLocaleDateString(localeCode, {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
                                                     })}
                                                 </span>
                                                 <span className="text-xs text-ink/50">
-                                                    {group.items.length} titik
+                                                    {t('regionDetail.pointsCount', { count: group.items.length })}
                                                 </span>
                                             </div>
                                             <RiskBadge category={group.dominantCategory} />
@@ -208,19 +212,21 @@ export default function RegionDetail({ region, score, hotspots, mitigation }) {
                                                         <table className="w-full min-w-[560px] text-sm">
                                                             <thead className="sticky top-0 z-10 border-b border-black/5 bg-canvas text-left text-xs uppercase tracking-wide text-ink/40">
                                                                 <tr>
-                                                                    <th className="px-4 py-2.5">Posisi</th>
-                                                                    <th className="px-4 py-2.5">Confidence</th>
-                                                                    <th className="px-4 py-2.5">FRP</th>
-                                                                    <th className="px-4 py-2.5">Risiko</th>
+                                                                    <th className="px-4 py-2.5">{t('regionDetail.table.position')}</th>
+                                                                    <th className="px-4 py-2.5">{t('regionDetail.table.confidence')}</th>
+                                                                    <th className="px-4 py-2.5">{t('regionDetail.table.frp')}</th>
+                                                                    <th className="px-4 py-2.5">{t('regionDetail.table.risk')}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-black/5">
                                                                 {group.items.map((h) => (
                                                                     <tr key={h.id}>
                                                                         <td className="px-4 py-2.5 text-ink/70">
-                                                                            {h.distance_from_centroid_km} km{' '}
-                                                                            {h.direction_from_centroid} dari pusat{' '}
-                                                                            {region.name}
+                                                                            {t('regionDetail.distanceFromCenter', {
+                                                                                distance: h.distance_from_centroid_km,
+                                                                                direction: h.direction_from_centroid,
+                                                                                name: region.name,
+                                                                            })}
                                                                         </td>
                                                                         <td className="tabular-nums px-4 py-2.5 text-ink/70">
                                                                             {h.confidence}%

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, LocateFixed, Loader2, Link2, TreePine, Flame } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
@@ -16,13 +17,6 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
     hidden: {},
     visible: { transition: { staggerChildren, delayChildren } },
 });
-
-const LOADING_STAGES = [
-    'Mengecek titik panas terdekat...',
-    'Menghitung risiko deforestasi (GFW)...',
-    'Mengambil data kualitas udara...',
-    'Menyusun ringkasan wilayah...',
-];
 
 function MorphingLoadingIcon() {
     const [stage, setStage] = useState(0);
@@ -67,14 +61,17 @@ function MorphingLoadingIcon() {
 }
 
 function LoadingCard() {
+    const { t } = useLanguage();
+    const stages = t('areaCheck.loadingStages');
     const [messageIndex, setMessageIndex] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setMessageIndex((i) => (i + 1) % LOADING_STAGES.length);
+            setMessageIndex((i) => (i + 1) % stages.length);
         }, 1500);
         return () => clearInterval(interval);
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stages.length]);
 
     return (
         <Card className="border-black/5 shadow-sm">
@@ -89,7 +86,7 @@ function LoadingCard() {
                         transition={{ duration: 0.25 }}
                         className="text-sm text-ink/60"
                     >
-                        {LOADING_STAGES[messageIndex]}
+                        {stages[messageIndex]}
                     </motion.p>
                 </AnimatePresence>
             </CardContent>
@@ -98,6 +95,7 @@ function LoadingCard() {
 }
 
 export default function AreaCheck() {
+    const { t } = useLanguage();
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [result, setResult] = useState(null);
     const [checking, setChecking] = useState(false);
@@ -118,10 +116,7 @@ export default function AreaCheck() {
             const response = await window.axios.post('/area-check', { lat, lon });
             setResult(response.data);
         } catch (err) {
-            setError(
-                err.response?.data?.message ??
-                    'Lokasi di luar cakupan wilayah Indonesia atau terjadi kesalahan. Coba lokasi lain.'
-            );
+            setError(err.response?.data?.message ?? t('areaCheck.errors.outOfCoverage'));
         } finally {
             setChecking(false);
         }
@@ -133,7 +128,7 @@ export default function AreaCheck() {
 
     const handleGeolocate = () => {
         if (!navigator.geolocation) {
-            setError('Browser kamu tidak mendukung geolokasi.');
+            setError(t('areaCheck.errors.geoUnsupported'));
             return;
         }
 
@@ -144,7 +139,7 @@ export default function AreaCheck() {
             },
             () => {
                 setChecking(false);
-                setError('Tidak bisa mengambil lokasi kamu. Coba klik langsung di peta.');
+                setError(t('areaCheck.errors.geoFailed'));
             }
         );
     };
@@ -164,16 +159,14 @@ export default function AreaCheck() {
             setMapsLink('');
             await submitCheck(lat, lon);
         } catch (err) {
-            setLinkError(
-                err.response?.data?.message ?? 'Gagal memproses link. Coba tempel ulang.'
-            );
+            setLinkError(err.response?.data?.message ?? t('areaCheck.errors.linkFailed'));
         } finally {
             setResolvingLink(false);
         }
     };
 
     return (
-        <AppLayout title="Cek Daerah Kamu" active="area-check">
+        <AppLayout title={t('areaCheck.pageTitle')} active="area-check">
             <motion.div
                 variants={staggerContainer(0.12)}
                 initial="hidden"
@@ -184,11 +177,9 @@ export default function AreaCheck() {
                 <div className="pointer-events-none absolute top-72 -left-16 -z-10 h-64 w-64 rounded-full bg-fresh/[0.05] blur-3xl" />
 
                 <motion.div variants={fadeUp} className="mb-6">
-                    <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">Cek Daerah Kamu</h1>
+                    <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">{t('areaCheck.title')}</h1>
                     <p className="mt-1 text-sm text-ink/60">
-                        Klik lokasi di peta, gunakan lokasi kamu saat ini, atau tempel link Google
-                        Maps untuk melihat status risiko karhutla, kualitas udara, dan hotspot
-                        terdekat.
+                        {t('areaCheck.description')}
                     </p>
                 </motion.div>
 
@@ -207,11 +198,11 @@ export default function AreaCheck() {
                             ) : (
                                 <LocateFixed className="h-4 w-4" />
                             )}
-                            Gunakan Lokasi Saya
+                            {t('areaCheck.useMyLocation')}
                         </Button>
                         <p className="hidden items-center gap-1.5 text-sm text-ink/50 md:flex">
                             <MapPin className="h-4 w-4" />
-                            atau klik langsung di peta
+                            {t('areaCheck.orClickMap')}
                         </p>
                     </div>
 
@@ -222,7 +213,7 @@ export default function AreaCheck() {
                                 type="text"
                                 value={mapsLink}
                                 onChange={(e) => setMapsLink(e.target.value)}
-                                placeholder="Tempel link Google Maps..."
+                                placeholder={t('areaCheck.mapsLinkPlaceholder')}
                                 disabled={resolvingLink || checking}
                                 className="w-full rounded-md border border-black/10 bg-white py-2 pl-9 pr-3 text-sm text-ink placeholder:text-ink/30 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest disabled:opacity-60"
                             />
@@ -236,7 +227,7 @@ export default function AreaCheck() {
                             {resolvingLink ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                'Cek'
+                                t('areaCheck.checkBtn')
                             )}
                         </Button>
                     </form>
@@ -319,8 +310,7 @@ export default function AreaCheck() {
                                         <CardContent className="py-12 text-center">
                                             <MapPin className="mx-auto mb-3 h-8 w-8 text-ink/20" />
                                             <p className="text-sm text-ink/50">
-                                                Pilih lokasi untuk melihat ringkasan kondisi
-                                                wilayah.
+                                                {t('areaCheck.emptyState')}
                                             </p>
                                         </CardContent>
                                     </Card>

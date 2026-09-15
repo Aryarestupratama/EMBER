@@ -107,7 +107,7 @@ Referensi gaya layout diambil dari Reforestum (struktur landing page, kebersihan
 
 ## 7. Aksesibilitas & Bahasa
 
-- UI utama menggunakan Bahasa Indonesia, dengan opsi toggle Bahasa Inggris untuk audiens juri internasional (minimal pada landing page & label kategori risiko).
+- UI menggunakan Bahasa Indonesia sebagai default, dengan toggle Bahasa Inggris yang mencakup **seluruh halaman dan komponen** (bukan hanya landing page & label kategori risiko seperti rencana awal — diperluas 16 September 2026, lihat `Progress.md` §10) untuk audiens juri internasional.
 - Kontras warna kategori risiko diuji agar tetap dapat dibedakan oleh pengguna buta warna (tidak mengandalkan warna semata — selalu disertai label teks/ikon).
 - Seluruh elemen peta memiliki alternatif teks/tabel data untuk aksesibilitas dasar.
 

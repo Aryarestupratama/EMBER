@@ -9,6 +9,7 @@ import CompareModal from '@/components/CompareModal';
 import SourceCredit from '@/components/SourceCredit';
 import { Badge } from '@/components/ui/badge';
 import { Flame, TreePine } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 16 },
@@ -20,24 +21,26 @@ const staggerContainer = (staggerChildren = 0.1, delayChildren = 0) => ({
     visible: { transition: { staggerChildren, delayChildren } },
 });
 
-function aqiToHeadline(aqi) {
+function aqiToHeadline(aqi, t) {
     if (aqi == null) return null;
-    if (aqi <= 50) return { headline: 'Baik', tone: 'success' };
-    if (aqi <= 100) return { headline: 'Sedang', tone: 'neutral' };
-    if (aqi <= 150) return { headline: 'Tidak Sehat (Sensitif)', tone: 'warning' };
-    return { headline: 'Tidak Sehat', tone: 'danger' };
+    if (aqi <= 50) return { headline: t('dashboard.aqiLevel.baik'), tone: 'success' };
+    if (aqi <= 100) return { headline: t('dashboard.aqiLevel.sedang'), tone: 'neutral' };
+    if (aqi <= 150) return { headline: t('dashboard.aqiLevel.tidakSehatSensitif'), tone: 'warning' };
+    return { headline: t('dashboard.aqiLevel.tidakSehat'), tone: 'danger' };
 }
 
 export default function Dashboard({ hotspots, stats, topRegions }) {
+    const { t, localeCode } = useLanguage();
+
     const lastUpdated = stats.last_updated
-        ? new Date(stats.last_updated).toLocaleString('id-ID', {
+        ? new Date(stats.last_updated).toLocaleString(localeCode, {
               timeZone: 'Asia/Jakarta',
               day: 'numeric',
               month: 'short',
               hour: '2-digit',
               minute: '2-digit',
           }) + ' WIB'
-        : 'Belum ada data';
+        : t('dashboard.noDataYet');
 
     const [selectedIds, setSelectedIds] = useState([]);
     const [compareOpen, setCompareOpen] = useState(false);
@@ -55,10 +58,10 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
         .map((item) => item.region);
 
     const worstAqi = stats.worst_aqi?.nearest_city_aqi ?? null;
-    const aqiStatus = aqiToHeadline(worstAqi);
+    const aqiStatus = aqiToHeadline(worstAqi, t);
 
     return (
-        <AppLayout title="Dashboard" active="dashboard">
+        <AppLayout title={t('dashboard.pageTitle')} active="dashboard">
             <motion.div variants={staggerContainer(0.12)} initial="hidden" animate="visible" className="relative">
                 <div className="pointer-events-none absolute -top-10 right-0 -z-10 h-72 w-72 rounded-full bg-forest-dark/[0.04] blur-3xl" />
                 <div className="pointer-events-none absolute top-72 -left-16 -z-10 h-64 w-64 rounded-full bg-fresh/[0.05] blur-3xl" />
@@ -66,16 +69,16 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                 <motion.div variants={fadeUp} className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <h1 className="font-heading text-xl font-bold text-ink sm:text-2xl">
-                            Dashboard Nasional
+                            {t('dashboard.title')}
                         </h1>
                         <p className="mt-1 text-sm text-ink/60">
-                            Monitoring titik panas kebakaran hutan dan lahan di seluruh Indonesia
+                            {t('dashboard.subtitle')}
                         </p>
                     </div>
 
                     <Badge className="w-fit gap-1.5 border-0 bg-fresh/10 text-fresh">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fresh" />
-                        Diperbarui {lastUpdated}
+                        {t('dashboard.updatedBadge', { time: lastUpdated })}
                     </Badge>
                 </motion.div>
 
@@ -85,51 +88,53 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                 >
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="Titik Panas Hari Ini"
+                            label={t('dashboard.stats.hotspotsToday.label')}
                             headline={
                                 stats.total_hotspots > 0
-                                    ? `${stats.total_hotspots.toLocaleString('id-ID')} titik terdeteksi`
-                                    : 'Tidak ada titik terdeteksi'
+                                    ? t('dashboard.stats.hotspotsToday.headlineActive', {
+                                          count: stats.total_hotspots.toLocaleString(localeCode),
+                                      })
+                                    : t('dashboard.stats.hotspotsToday.headlineEmpty')
                             }
                             value={stats.total_hotspots}
                             tone={stats.total_hotspots > 0 ? 'warning' : 'success'}
                             showValue={false}
-                            tooltip="Titik panas dari NASA FIRMS pada data terakhir yang berhasil di-ingest, bukan selalu hari ini jika pembaruan sempat tertunda."
+                            tooltip={t('dashboard.stats.hotspotsToday.tooltip')}
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="Wilayah Risiko Tinggi"
+                            label={t('dashboard.stats.highRiskRegions.label')}
                             headline={
                                 stats.high_risk_regions > 0
-                                    ? `${stats.high_risk_regions} wilayah perlu perhatian`
-                                    : 'Tidak ada wilayah berisiko tinggi'
+                                    ? t('dashboard.stats.highRiskRegions.headlineActive', { count: stats.high_risk_regions })
+                                    : t('dashboard.stats.highRiskRegions.headlineEmpty')
                             }
                             value={stats.high_risk_regions}
-                            sublabel={`dari ${stats.total_regions} dipantau`}
+                            sublabel={t('dashboard.stats.highRiskRegions.sublabel', { total: stats.total_regions })}
                             tone={stats.high_risk_regions > 0 ? 'danger' : 'success'}
                             showValue={false}
-                            tooltip="Kabupaten/kota berkategori Priority Score 'Tinggi' atau 'Sangat Tinggi' — kombinasi risiko deforestasi historis (GFW), frekuensi hotspot, dan dampak AQI."
+                            tooltip={t('dashboard.stats.highRiskRegions.tooltip')}
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="Kualitas Udara Terburuk"
+                            label={t('dashboard.stats.worstAqi.label')}
                             headline={aqiStatus?.headline}
                             value={worstAqi}
                             sublabel={stats.worst_aqi?.nearest_city_name}
                             tone={aqiStatus?.tone}
-                            tooltip="AQI (skala AQI US EPA) tertinggi dari kota terdekat hotspot berkategori Tinggi/Sangat Tinggi."
+                            tooltip={t('dashboard.stats.worstAqi.tooltip')}
                         />
                     </motion.div>
                     <motion.div variants={fadeUp}>
                         <StatTile
-                            label="Cakupan Sistem"
-                            headline="Terpantau di seluruh Indonesia"
+                            label={t('dashboard.stats.coverage.label')}
+                            headline={t('dashboard.stats.coverage.headline')}
                             value={stats.total_regions}
-                            sublabel="kabupaten/kota"
+                            sublabel={t('dashboard.stats.coverage.sublabel')}
                             variant="muted"
-                            tooltip="Total kabupaten/kota se-Indonesia yang datanya dipantau EMBER. Daftar Wilayah Prioritas di samping menampilkan 10 wilayah dengan Priority Score tertinggi dari total ini."
+                            tooltip={t('dashboard.stats.coverage.tooltip')}
                         />
                     </motion.div>
                 </motion.div>
@@ -141,14 +146,14 @@ export default function Dashboard({ hotspots, stats, topRegions }) {
                     >
                         <div className="flex flex-col gap-2 border-b border-black/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                             <h2 className="font-heading text-sm font-semibold text-ink">
-                                Peta Titik Panas
+                                {t('dashboard.mapTitle')}
                             </h2>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-ink/50 sm:gap-3">
-                                <LegendItem shape="tree" colorClass="text-risk-rendah" label="Rendah" />
-                                <LegendItem shape="flame" colorClass="text-risk-sedang" label="Sedang" />
-                                <LegendItem shape="flame" colorClass="text-risk-tinggi" label="Tinggi" />
-                                <LegendItem shape="flame" colorClass="text-risk-sangat-tinggi" label="Sangat Tinggi" />
-                                <LegendItem shape="na" label="N/A" />
+                                <LegendItem shape="tree" colorClass="text-risk-rendah" label={t('risk.rendah')} />
+                                <LegendItem shape="flame" colorClass="text-risk-sedang" label={t('risk.sedang')} />
+                                <LegendItem shape="flame" colorClass="text-risk-tinggi" label={t('risk.tinggi')} />
+                                <LegendItem shape="flame" colorClass="text-risk-sangat-tinggi" label={t('risk.sangat_tinggi')} />
+                                <LegendItem shape="na" label={t('risk.na')} />
                             </div>
                         </div>
                         <div className="min-h-[320px] flex-1 sm:min-h-[420px] lg:min-h-[560px]">

@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $hotspots = $latestHotspotDate
             ? FireHotspot::whereDate('acq_date', $latestHotspotDate)
                 ->select(['id', 'latitude', 'longitude', 'acq_date', 'gfw_risk_category', 'confidence', 'frp', 'region_id'])
-                // region:id,name — cuma ambil kolom yang dipakai frontend (nama wilayah),
+                // region:id,name  cuma ambil kolom yang dipakai frontend (nama wilayah),
                 // bukan seluruh baris Region, biar payload ke Dashboard tetap ringan
                 // walau hotspot-nya banyak. region_id BISA null (proses assign di
                 // ingest bisa gagal/lewat untuk sebagian baris, lihat data live),
@@ -27,7 +27,7 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        // Sama untuk priority score — ambil tanggal terakhir yang ada datanya
+        // Sama untuk priority score  ambil tanggal terakhir yang ada datanya
         $latestScoreDate = RegionPriorityScore::max('score_date');
 
         $stats = [
@@ -50,7 +50,7 @@ class DashboardController extends Controller
                 ?->finished_at,
             'data_date' => $latestHotspotDate,
             // Total wilayah yang di-seed sistem (selalu 502, tidak tergantung
-            // ada/tidaknya hotspot hari itu) — dipakai untuk stat
+            // ada/tidaknya hotspot hari itu)  dipakai untuk stat
             // "Wilayah Terpantau", dipisah dari topRegions.length (yang cuma
             // menampilkan 10 wilayah teratas di ranking).
             'total_regions' => Region::count(),

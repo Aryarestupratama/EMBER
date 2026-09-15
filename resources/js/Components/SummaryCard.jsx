@@ -2,14 +2,7 @@ import RiskBadge from '@/components/RiskBadge';
 import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Flame, Wind, Radar, Lightbulb } from 'lucide-react';
-
-const AQI_CATEGORY_LABELS = {
-    baik: 'Baik',
-    sedang: 'Sedang',
-    tidak_sehat: 'Tidak Sehat',
-    sangat_tidak_sehat: 'Sangat Tidak Sehat',
-    berbahaya: 'Berbahaya',
-};
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const AQI_CATEGORY_TONE = {
     baik: 'text-forest-dark',
@@ -34,7 +27,21 @@ function SectionRow({ icon: Icon, iconClass, bgClass, label, children }) {
 }
 
 export default function SummaryCard({ result }) {
+    const { t } = useLanguage();
     const { location, risk, air_quality, nearby_hotspots, mitigation } = result;
+
+    const aqiCategoryLabel = air_quality.category
+        ? t(`summaryCard.aqiCategory.${air_quality.category}`)
+        : t('summaryCard.unknownCategory');
+
+    // Backend hanya mengirim kategori (lihat MitigationHelper::forLocation);
+    // teksnya sepenuhnya diambil dari kamus terjemahan supaya ikut toggle bahasa.
+    const fireRiskCategory = mitigation?.fire_risk?.category ?? 'na';
+    const airQualityCategory = mitigation?.air_quality?.category ?? null;
+    const fireRiskShortText = t(`mitigation.fireRisk.${fireRiskCategory}.shortText`);
+    const airQualityShortText = airQualityCategory
+        ? t(`mitigation.airQuality.${airQualityCategory}.shortText`)
+        : t('mitigation.airQuality.unavailable.shortText');
 
     return (
         <Card className="border-black/5 shadow-sm">
@@ -43,7 +50,7 @@ export default function SummaryCard({ result }) {
                     icon={MapPin}
                     iconClass="text-forest-dark"
                     bgClass="bg-forest/10"
-                    label="Lokasi"
+                    label={t('summaryCard.location')}
                 >
                     <p className="text-sm text-ink">
                         {air_quality.city ? (
@@ -62,13 +69,13 @@ export default function SummaryCard({ result }) {
                     icon={Flame}
                     iconClass="text-risk-tinggi"
                     bgClass="bg-risk-tinggi/10"
-                    label="Status Risiko Karhutla"
+                    label={t('summaryCard.riskStatus')}
                 >
                     <div className="flex items-center gap-2">
                         <RiskBadge category={risk.category} className="px-3 py-1 text-sm" />
                         {risk.score !== null && (
                             <span className="tabular-nums text-sm text-ink/50">
-                                skor {risk.score.toFixed(2)}
+                                {t('summaryCard.scoreLabel', { score: risk.score.toFixed(2) })}
                             </span>
                         )}
                     </div>
@@ -78,17 +85,17 @@ export default function SummaryCard({ result }) {
                     icon={Wind}
                     iconClass="text-fresh"
                     bgClass="bg-fresh/10"
-                    label="Kualitas Udara Saat Ini"
+                    label={t('summaryCard.airQuality')}
                 >
                     {air_quality.aqi ? (
                         <p className="text-sm text-ink">
                             <span className="tabular-nums text-lg font-semibold text-forest-dark">
                                 AQI {air_quality.aqi}
                             </span>{' '}
-                            — {AQI_CATEGORY_LABELS[air_quality.category] ?? 'Kategori tidak diketahui'}
+                             <span className={AQI_CATEGORY_TONE[air_quality.category] ?? ''}>{aqiCategoryLabel}</span>
                         </p>
                     ) : (
-                        <p className="text-sm text-ink/50">Data tidak tersedia</p>
+                        <p className="text-sm text-ink/50">{t('common.dataNotAvailable')}</p>
                     )}
                 </SectionRow>
 
@@ -96,21 +103,23 @@ export default function SummaryCard({ result }) {
                     icon={Radar}
                     iconClass="text-ink/60"
                     bgClass="bg-ink/5"
-                    label="Hotspot Terdekat"
+                    label={t('summaryCard.nearbyHotspots')}
                 >
                     {nearby_hotspots.count > 0 ? (
                         <p className="text-sm text-ink">
-                            <span className="tabular-nums font-semibold">{nearby_hotspots.count}</span> titik
-                            dalam radius {nearby_hotspots.radius_km} km
+                            <span className="tabular-nums font-semibold">{nearby_hotspots.count}</span>{' '}
+                            {t('summaryCard.hotspotCountSuffix', { radius: nearby_hotspots.radius_km })}
                             {nearby_hotspots.nearest_km !== null && (
                                 <span className="text-ink/50">
-                                    {' '}· terdekat {nearby_hotspots.nearest_km.toFixed(1)} km
+                                    {t('summaryCard.nearestDistance', {
+                                        distance: nearby_hotspots.nearest_km.toFixed(1),
+                                    })}
                                 </span>
                             )}
                         </p>
                     ) : (
                         <p className="text-sm text-ink/50">
-                            Tidak ada hotspot dalam radius {nearby_hotspots.radius_km} km
+                            {t('summaryCard.noHotspots', { radius: nearby_hotspots.radius_km })}
                         </p>
                     )}
                 </SectionRow>
@@ -119,13 +128,11 @@ export default function SummaryCard({ result }) {
                     icon={Lightbulb}
                     iconClass="text-amber-700"
                     bgClass="bg-amber-500/10"
-                    label="Rekomendasi"
+                    label={t('summaryCard.recommendation')}
                 >
                     <div className="space-y-2 rounded-lg bg-canvas p-3">
-                        <p className="text-sm text-ink/80">{mitigation?.fire_risk?.short_text}</p>
-                        {mitigation?.air_quality?.short_text && (
-                            <p className="text-sm text-ink/80">{mitigation.air_quality.short_text}</p>
-                        )}
+                        <p className="text-sm text-ink/80">{fireRiskShortText}</p>
+                        <p className="text-sm text-ink/80">{airQualityShortText}</p>
                     </div>
                 </SectionRow>
 

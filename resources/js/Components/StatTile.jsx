@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const TONE_HEADLINE_CLASS = {
     neutral: 'text-ink',
@@ -29,7 +30,8 @@ export default function StatTile({
     variant = 'default',
     showValue = true,
 }) {
-    const isEmpty = value === null || value === undefined || value === '—';
+    const { t } = useLanguage();
+    const isEmpty = value === null || value === undefined || value === '';
     const isMuted = variant === 'muted';
 
     return (
@@ -48,7 +50,7 @@ export default function StatTile({
                                     <button
                                         type="button"
                                         className="text-ink/30 hover:text-ink/60 transition-colors"
-                                        aria-label={`Penjelasan: ${label}`}
+                                        aria-label={t('statTile.infoAria', { label })}
                                     >
                                         <Info className="size-3.5" />
                                     </button>
@@ -68,7 +70,7 @@ export default function StatTile({
                                     isEmpty ? 'text-ink/30' : isMuted ? 'text-ink' : TONE_HEADLINE_CLASS[tone]
                                 }`}
                             >
-                                {isEmpty ? 'Data tidak tersedia' : headline}
+                                {isEmpty ? t('common.dataNotAvailable') : headline}
                             </p>
                         </div>
                         <div className="min-h-[1.25rem] pt-1">
@@ -91,13 +93,13 @@ export default function StatTile({
                                     isEmpty ? 'text-ink/30' : accent ? 'text-risk-tinggi' : 'text-forest-dark'
                                 }`}
                             >
-                                {isEmpty ? '—' : <AnimatedNumber value={value} />}
+                                {isEmpty ? '' : <AnimatedNumber value={value} />}
                             </p>
                         </div>
                         <div className="min-h-[1.25rem] pt-1">
                             {sublabel && <p className="truncate text-xs text-ink/50">{sublabel}</p>}
                             {isEmpty && !sublabel && (
-                                <p className="text-xs text-ink/40">Data tidak tersedia</p>
+                                <p className="text-xs text-ink/40">{t('common.dataNotAvailable')}</p>
                             )}
                         </div>
                     </>
@@ -108,11 +110,12 @@ export default function StatTile({
 }
 
 function AnimatedNumber({ value }) {
+    const { localeCode } = useLanguage();
     const numericValue = Number(value);
     const isNumeric = !Number.isNaN(numericValue);
 
     const motionValue = useMotionValue(0);
-    const rounded = useTransform(motionValue, (latest) => Math.round(latest).toLocaleString('id-ID'));
+    const rounded = useTransform(motionValue, (latest) => Math.round(latest).toLocaleString(localeCode));
 
     useEffect(() => {
         if (!isNumeric) return;

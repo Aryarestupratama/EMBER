@@ -9,6 +9,7 @@ Dokumen ini mendeskripsikan arsitektur teknis final sistem EMBER, mencakup stack
 |---|---|
 | 6 September 2026 | Sumber data risiko karhutla dialihkan dari BNPB InaRISK (ArcGIS REST) ke Global Forest Watch (GFW) Data API, setelah pengujian 3 hari berturut-turut menunjukkan instabilitas server BNPB (timeout, error 503, kegagalan Web Adaptor). Detail investigasi didokumentasikan pada `Analisa-Sumber-Data-Alternatif.md`. Dokumen ini merepresentasikan arsitektur final pasca-migrasi. |
 | 8 September 2026 | Ditemukan dan diperbaiki isu kualitas data seeding wilayah untuk 5 kabupaten/kota di Kalimantan Utara (lihat §3.4). |
+| 16 September 2026 | Konten teks rekomendasi mitigasi (sebelumnya `MITIGATION_CONTENT` di `config/ember.php`) dipindahkan ke frontend (`resources/js/lib/i18n/translations.js`) supaya ikut toggle Bahasa Indonesia/Inggris. `MitigationHelper.php` (§5) kini hanya menentukan kategori (`fire_risk_category`, `air_quality_category`), tidak lagi membaca/mengembalikan teks siap-tampil. Lihat `Progress.md` §10 untuk detail keputusan. |
 
 ---
 
@@ -20,7 +21,7 @@ Dokumen ini mendeskripsikan arsitektur teknis final sistem EMBER, mencakup stack
 | Frontend | React via Inertia.js |
 | Styling | Tailwind CSS v4 + shadcn/ui (Base UI, preset Nova) |
 | Database | MySQL / PostgreSQL (via Eloquent ORM) |
-| Peta | Leaflet.js (via react-leaflet) |
+| Peta | Leaflet.js (via react-leaflet + react-leaflet-cluster untuk clustering marker) |
 | Scheduling | Laravel Task Scheduling + Queue |
 | Hosting | VPS/shared hosting yang mendukung Laravel |
 
@@ -198,6 +199,8 @@ app/
         GfwService.php
         IqairService.php
         GoogleMapsLinkService.php
+        MitigationHelper.php   # bukan HTTP service (tanpa API call eksternal) — lookup
+                                # kategori mitigasi risiko/AQI; teks ditampilkan di frontend
       Jobs/
         IngestFireHotspotsJob.php
         CalculateRegionPriorityJob.php
@@ -215,6 +218,10 @@ app/
       RegionCompareController.php
 resources/
   js/
+    lib/
+      i18n/
+        translations.js       # kamus terjemahan ID/EN, satu sumber kebenaran
+        LanguageContext.jsx    # React Context + hook useLanguage()
     Layouts/
       AppLayout.jsx
     Pages/
@@ -231,6 +238,7 @@ resources/
       SummaryCard.jsx
       CompareTrigger.jsx
       CompareModal.jsx
+      LanguageToggle.jsx
       ui/
         navigation-menu.jsx
 routes/

@@ -45,7 +45,7 @@ function TooltipContent({
         // z-[1100]: dinaikkan dari z-50 bawaan. `isolate` di sini membuat
         // stacking context baru untuk Popup di dalamnya, jadi z-index Popup
         // (di bawah) percuma dinaikkan sendiri kalau Positioner ini masih
-        // z-50 — dia yang jadi "plafon"-nya. Tooltip di-portal ke
+        // z-50  dia yang jadi "plafon"-nya. Tooltip di-portal ke
         // document.body, sama seperti DialogContent (z-[1000]), jadi harus
         // lebih tinggi dari itu supaya tooltip di dalam modal tetap kelihatan.
         className="isolate z-[1100]"

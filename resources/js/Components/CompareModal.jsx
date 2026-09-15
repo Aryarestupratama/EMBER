@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ScoreBreakdown from '@/components/ScoreBreakdown';
 import RiskBadge from '@/components/RiskBadge';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function CompareModal({ open, onOpenChange, regionIds }) {
+    const { t } = useLanguage();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -22,23 +24,24 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
 
         fetch(route('region.compare') + '?' + params.toString())
             .then((res) => {
-                if (!res.ok) throw new Error('Gagal memuat data perbandingan');
+                if (!res.ok) throw new Error(t('compareModal.fetchError'));
                 return res.json();
             })
             .then((json) => setData(json.data))
-            .catch(() => setError('Gagal memuat data perbandingan. Coba lagi.'))
+            .catch(() => setError(t('compareModal.loadError')))
             .finally(() => setLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, regionIds]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[85vh] max-w-4xl sm:max-w-4xl overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="font-heading">Bandingkan Wilayah</DialogTitle>
+                    <DialogTitle className="font-heading">{t('compareModal.title')}</DialogTitle>
                 </DialogHeader>
 
                 {loading && (
-                    <p className="py-8 text-center text-sm text-ink/50">Memuat data...</p>
+                    <p className="py-8 text-center text-sm text-ink/50">{t('compareModal.loading')}</p>
                 )}
 
                 {error && (
@@ -47,7 +50,7 @@ export default function CompareModal({ open, onOpenChange, regionIds }) {
 
                 {!loading && !error && regionIds.length < 2 && (
                     <p className="py-8 text-center text-sm text-ink/50">
-                        Pilih minimal 2 wilayah untuk dibandingkan.
+                        {t('compareModal.selectAtLeast2')}
                     </p>
                 )}
 

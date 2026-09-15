@@ -1,8 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitCompare, X } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function CompareTrigger({ selectedRegions, onRemove, onCompare }) {
+    const { t } = useLanguage();
+
     return (
         <AnimatePresence>
             {selectedRegions.length >= 2 && (
@@ -23,7 +26,7 @@ export default function CompareTrigger({ selectedRegions, onRemove, onCompare })
                                 <button
                                     type="button"
                                     onClick={() => onRemove(r.id)}
-                                    aria-label={`Hapus ${r.name} dari perbandingan`}
+                                    aria-label={t('compareTrigger.removeAria', { name: r.name })}
                                     className="text-ink/40 hover:text-ink/70"
                                 >
                                     <X className="size-3" />
@@ -33,7 +36,7 @@ export default function CompareTrigger({ selectedRegions, onRemove, onCompare })
                     </div>
                     <div className="flex shrink-0 items-center gap-2.5">
                         <span className="hidden tabular-nums text-xs text-ink/40 sm:inline">
-                            {selectedRegions.length}/3 dipilih
+                            {t('compareTrigger.selectedCount', { count: selectedRegions.length })}
                         </span>
                         <Button
                             size="sm"
@@ -41,7 +44,7 @@ export default function CompareTrigger({ selectedRegions, onRemove, onCompare })
                             className="gap-1.5 bg-forest text-white hover:bg-forest-dark"
                         >
                             <GitCompare className="size-3.5" />
-                            Bandingkan
+                            {t('compareTrigger.compareBtn')}
                         </Button>
                     </div>
                 </motion.div>

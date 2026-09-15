@@ -1,40 +1,46 @@
 import { Badge } from '@/components/ui/badge';
 import { HelpCircle } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
+// Hanya menyimpan kelas styling per kategori. Label ditentukan lewat
+// terjemahan (lihat lib/i18n/translations.js -> risk.*) supaya konsisten
+// dengan pola single source of truth threshold di Rules.md §2/§7.
 export const RISK_CONFIG = {
     rendah: {
-        label: 'Rendah',
         textClass: 'text-risk-rendah',
         softBgClass: 'bg-risk-rendah/10',
         dotClass: 'bg-risk-rendah',
     },
     sedang: {
-        label: 'Sedang',
         textClass: 'text-amber-700',
         softBgClass: 'bg-risk-sedang/15',
         dotClass: 'bg-risk-sedang',
     },
     tinggi: {
-        label: 'Tinggi',
         textClass: 'text-risk-tinggi',
         softBgClass: 'bg-risk-tinggi/10',
         dotClass: 'bg-risk-tinggi',
     },
     sangat_tinggi: {
-        label: 'Sangat Tinggi',
         textClass: 'text-risk-sangat-tinggi',
         softBgClass: 'bg-risk-sangat-tinggi/10',
         dotClass: 'bg-risk-sangat-tinggi',
     },
     na: {
-        label: 'N/A',
         textClass: 'text-ink/50',
         softBgClass: 'bg-transparent',
         dotClass: 'bg-risk-na',
     },
 };
 
+// Helper dipakai juga oleh HotspotPopup.jsx supaya label kategori risiko
+// konsisten di seluruh aplikasi, bukan didefinisikan berulang.
+export function getRiskLabel(t, category) {
+    return RISK_CONFIG[category] ? t(`risk.${category}`) : t('risk.na');
+}
+
 export default function RiskBadge({ category, className = '' }) {
+    const { t } = useLanguage();
     const config = RISK_CONFIG[category] ?? RISK_CONFIG.na;
     const isNa = !RISK_CONFIG[category] || category === 'na';
     const badgeClass = isNa
@@ -51,7 +57,7 @@ export default function RiskBadge({ category, className = '' }) {
             ) : (
                 <span className={`h-1.5 w-1.5 rounded-full ${config.dotClass}`} />
             )}
-            {config.label}
+            {getRiskLabel(t, category)}
         </Badge>
     );
 }
