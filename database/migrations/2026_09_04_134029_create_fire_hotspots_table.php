@@ -37,6 +37,8 @@ return new class extends Migration
             $table->unsignedInteger('nearest_city_aqi')->nullable();
             $table->string('nearest_city_name', 100)->nullable();
             $table->string('nearest_city_state', 100)->nullable();
+            $table->decimal('nearest_city_temp_c', 5, 2)->nullable(); // suhu udara (°C), field `tp` response IQAir
+            $table->decimal('nearest_city_heat_index_c', 5, 2)->nullable(); // suhu terasa (°C), field `heatIndex` response IQAir
 
             // Referensi wilayah administratif
             $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();

@@ -1,7 +1,7 @@
 import RiskBadge from '@/components/RiskBadge';
 import SourceCredit from '@/components/SourceCredit';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Flame, Wind, Radar, Lightbulb } from 'lucide-react';
+import { MapPin, Flame, Wind, Radar, Lightbulb, Thermometer } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const AQI_CATEGORY_TONE = {
@@ -28,7 +28,7 @@ function SectionRow({ icon: Icon, iconClass, bgClass, label, children }) {
 
 export default function SummaryCard({ result }) {
     const { t } = useLanguage();
-    const { location, risk, air_quality, nearby_hotspots, mitigation } = result;
+    const { location, risk, air_quality, weather, nearby_hotspots, mitigation } = result;
 
     const aqiCategoryLabel = air_quality.category
         ? t(`summaryCard.aqiCategory.${air_quality.category}`)
@@ -93,6 +93,29 @@ export default function SummaryCard({ result }) {
                                 AQI {air_quality.aqi}
                             </span>{' '}
                              <span className={AQI_CATEGORY_TONE[air_quality.category] ?? ''}>{aqiCategoryLabel}</span>
+                        </p>
+                    ) : (
+                        <p className="text-sm text-ink/50">{t('common.dataNotAvailable')}</p>
+                    )}
+                </SectionRow>
+
+                <SectionRow
+                    icon={Thermometer}
+                    iconClass="text-amber-600"
+                    bgClass="bg-amber-500/10"
+                    label={t('summaryCard.temperature')}
+                >
+                    {weather?.temp_c != null ? (
+                        <p className="text-sm text-ink">
+                            <span className="tabular-nums text-lg font-semibold text-forest-dark">
+                                {Math.round(weather.temp_c)}°C
+                            </span>
+                            {weather.heat_index_c != null && (
+                                <span className="text-ink/50">
+                                    {' '}
+                                    {t('summaryCard.feelsLike', { temp: Math.round(weather.heat_index_c) })}
+                                </span>
+                            )}
                         </p>
                     ) : (
                         <p className="text-sm text-ink/50">{t('common.dataNotAvailable')}</p>

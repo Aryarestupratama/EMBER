@@ -30,6 +30,8 @@ class FireHotspot extends Model
         'nearest_city_aqi',
         'nearest_city_name',
         'nearest_city_state',
+        'nearest_city_temp_c',
+        'nearest_city_heat_index_c',
         'region_id',
         'fetched_at',
     ];
@@ -45,8 +47,10 @@ class FireHotspot extends Model
             'acq_date'       => 'date',
             'bright_t31'     => 'decimal:2',
             'frp'            => 'decimal:2',
-            'gfw_risk_score' => 'decimal:6',
-            'fetched_at'     => 'datetime',
+            'gfw_risk_score'             => 'decimal:6',
+            'nearest_city_temp_c'        => 'decimal:2',
+            'nearest_city_heat_index_c'  => 'decimal:2',
+            'fetched_at'                 => 'datetime',
         ];
     }
 

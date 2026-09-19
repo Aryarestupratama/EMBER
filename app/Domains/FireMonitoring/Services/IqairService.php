@@ -16,7 +16,7 @@ class IqairService
     }
 
     /**
-     * @return array{aqi: int, city: string, state: string}|null
+     * @return array{aqi: int, city: ?string, state: ?string, temp_c: ?float, heat_index_c: ?float}|null
      */
     public function nearestCity(float $lat, float $lon): ?array
     {
@@ -39,9 +39,20 @@ class IqairService
             }
 
             return [
-                'aqi'   => (int) $data['current']['pollution']['aqius'],
-                'city'  => $data['city'] ?? null,
-                'state' => $data['state'] ?? null,
+                'aqi'          => (int) $data['current']['pollution']['aqius'],
+                'city'         => $data['city'] ?? null,
+                'state'        => $data['state'] ?? null,
+                // Suhu udara aktual (°C). Bukan field wajib di response — kalau
+                // sewaktu-waktu tidak tersedia untuk suatu lokasi/plan, tetap
+                // null (bukan 0), konsisten dengan prinsip null ≠ 0 (Rules.md §2).
+                'temp_c'       => isset($data['current']['weather']['tp'])
+                    ? (float) $data['current']['weather']['tp']
+                    : null,
+                // "Suhu terasa" — memperhitungkan kelembapan. Sama seperti
+                // temp_c, dibiarkan null kalau tidak ada di response.
+                'heat_index_c' => isset($data['current']['weather']['heatIndex'])
+                    ? (float) $data['current']['weather']['heatIndex']
+                    : null,
             ];
         } catch (\Throwable $e) {
             Log::error('IQAir nearest_city() failed', ['message' => $e->getMessage()]);

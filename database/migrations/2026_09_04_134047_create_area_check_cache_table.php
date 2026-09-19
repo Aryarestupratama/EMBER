@@ -20,6 +20,8 @@ return new class extends Migration
 
             $table->unsignedInteger('aqi')->nullable();
             $table->string('nearest_city_name', 100)->nullable();
+            $table->decimal('temp_c', 5, 2)->nullable(); // suhu udara (°C), field `tp` response IQAir
+            $table->decimal('heat_index_c', 5, 2)->nullable(); // suhu terasa (°C), field `heatIndex` response IQAir
 
             $table->timestamp('cached_at');
             $table->timestamps();

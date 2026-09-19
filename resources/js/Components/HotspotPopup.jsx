@@ -1,5 +1,5 @@
 import { Popup } from 'react-leaflet';
-import { MapPin, Gauge, Calendar, Flame as FlameIcon, TreePine } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Flame as FlameIcon, TreePine, Wind, Thermometer } from 'lucide-react';
 import { RISK_CONFIG, getRiskLabel } from '@/components/RiskBadge';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
@@ -84,6 +84,44 @@ export default function HotspotPopup({ hotspot }) {
                         </span>
                     </div>
                 </div>
+
+                {/*
+                    AQI & suhu cuma diisi backend untuk hotspot kategori
+                    tinggi/sangat_tinggi (Architecture.md §4.1) — jadi
+                    section ini otomatis tersembunyi untuk hotspot
+                    rendah/sedang, bukan ditampilkan sebagai kosong/N/A.
+                */}
+                {hotspot.nearest_city_aqi != null && (
+                    <div className="mt-2 space-y-1.5 border-t border-dashed border-black/10 pt-2">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-ink/60">
+                                <Wind className="h-3 w-3 text-ink/40" />
+                                {t('hotspotPopup.aqi')}
+                            </span>
+                            <span className="tabular-nums font-semibold text-ink">
+                                {hotspot.nearest_city_aqi}
+                                {hotspot.nearest_city_name ? ` · ${hotspot.nearest_city_name}` : ''}
+                            </span>
+                        </div>
+                        {hotspot.nearest_city_temp_c != null && (
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="flex items-center gap-1 text-ink/60">
+                                    <Thermometer className="h-3 w-3 text-ink/40" />
+                                    {t('hotspotPopup.temperature')}
+                                </span>
+                                <span className="tabular-nums font-semibold text-ink">
+                                    {Math.round(hotspot.nearest_city_temp_c)}°C
+                                    {hotspot.nearest_city_heat_index_c != null && (
+                                        <span className="text-ink/50">
+                                            {' '}
+                                            ({t('hotspotPopup.feelsLike')} {Math.round(hotspot.nearest_city_heat_index_c)}°C)
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </Popup>
     );

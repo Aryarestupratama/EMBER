@@ -103,9 +103,11 @@ class IngestFireHotspotsJob implements ShouldQueue
                         $aqi = $iqair->nearestCity($lat, $lon);
 
                         if ($aqi) {
-                            $hotspotData['nearest_city_aqi']   = $aqi['aqi'];
-                            $hotspotData['nearest_city_name']  = $aqi['city'];
-                            $hotspotData['nearest_city_state'] = $aqi['state'];
+                            $hotspotData['nearest_city_aqi']          = $aqi['aqi'];
+                            $hotspotData['nearest_city_name']         = $aqi['city'];
+                            $hotspotData['nearest_city_state']        = $aqi['state'];
+                            $hotspotData['nearest_city_temp_c']       = $aqi['temp_c'];
+                            $hotspotData['nearest_city_heat_index_c'] = $aqi['heat_index_c'];
                         } else {
                             $hasFailures = true;
                         }

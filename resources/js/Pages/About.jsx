@@ -44,10 +44,10 @@ const SUPERVISOR = {
 };
 
 const TEAM_MEMBERS = [
-    { name: 'Arya Restu Pratama', role: '[Peran]' },
-    { name: 'Justin Dwinata', role: '[Peran]' },
-    { name: 'Mutia Bela Puspita', role: '[Peran]' },
-    { name: 'Azka Niaji Rangkuti', role: '[Peran]' },
+    { name: 'Arya Restu Pratama', role: 'Project Lead / Backend Developer' },
+    { name: 'Justin Dwinata', role: 'Frontend Developer' },
+    { name: 'Mutia Bela Puspita', role: 'UI/UX Designer & Documentation Lead' },
+    { name: 'Azka Niaji Rangkuti', role: 'Data & Integration Engineer' },
 ];
 
 const THRESHOLDS = [

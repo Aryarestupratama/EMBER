@@ -63,6 +63,8 @@ class AreaCheckController extends Controller
                 'gfw_risk_category'  => $risk['risk_category'],
                 'aqi'                => $aqiResult['aqi'] ?? null,
                 'nearest_city_name'  => $aqiResult['city'] ?? null,
+                'temp_c'             => $aqiResult['temp_c'] ?? null,
+                'heat_index_c'       => $aqiResult['heat_index_c'] ?? null,
                 'cached_at'          => now(),
             ]
         );
@@ -90,6 +92,10 @@ class AreaCheckController extends Controller
                 'aqi'      => $cache->aqi,
                 'category' => MitigationHelper::getAqiCategory($cache->aqi),
                 'city'     => $cache->nearest_city_name,
+            ],
+            'weather' => [
+                'temp_c'       => $cache->temp_c ? (float) $cache->temp_c : null,
+                'heat_index_c' => $cache->heat_index_c ? (float) $cache->heat_index_c : null,
             ],
             'nearby_hotspots' => [
                 'count'          => $nearbyHotspots->count(),
