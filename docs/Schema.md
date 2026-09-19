@@ -1,26 +1,27 @@
 # Database Schema Document — EMBER
 **Early Monitoring for Burning Environment & Reforestation**
 
-Database dibangun dari nol untuk proyek ini. Tidak ada tabel/data yang di-reuse dari proyek lain.
+The database is built from scratch for this project. No tables/data are reused from any other project.
 
-## Riwayat Revisi
+## Revision History
 
-| Tanggal | Perubahan |
+| Date | Change |
 |---|---|
-| 6 September 2026 | Kolom yang sebelumnya bernama `bnpb_risk_score` / `bnpb_risk_category` diganti menjadi `gfw_risk_score` / `gfw_risk_category` mengikuti perpindahan sumber data risiko dari BNPB InaRISK ke Global Forest Watch (GFW). Lihat `Analisa-Sumber-Data-Alternatif.md` untuk alasan lengkap. |
-| 12 September 2026 | Statistik sampel kalibrasi pada §8 diperbarui berdasarkan pengujian ulang 20 titik koordinat nyata melalui pipeline `GfwService` (lihat catatan revisi yang sama pada `Rules.md` §2). Tabel kategorisasi tidak berubah karena skala normalisasi (35%) tetap valid terhadap data baru. |
+| September 6, 2026 | The columns previously named `bnpb_risk_score` / `bnpb_risk_category` were renamed to `gfw_risk_score` / `gfw_risk_category` following the switch of the risk data source from BNPB InaRISK to Global Forest Watch (GFW). See `Analisa-Sumber-Data-Alternatif.md` for the full rationale. |
+| September 12, 2026 | The calibration sample statistics in §8 were updated based on re-testing 20 real coordinate points via the `GfwService` pipeline (see the matching revision note in `Rules.md` §2). The categorization table did not change since the normalization scale (35%) remains valid against this new data. |
+| September 19, 2026 | Columns `nearest_city_temp_c` and `nearest_city_heat_index_c` were added to `fire_hotspots`; columns `temp_c` and `heat_index_c` were added to `area_check_cache`. Both store actual air temperature and perceived/"feels like" temperature (heat index) data from the `weather.tp`/`weather.heatIndex` fields of the same IQAir response already used for AQI (see `Architecture.md` §3.3) — not the addition of a new data source. They follow the same nullable pattern as other IQAir columns: `null` means the data failed to fetch (null ≠ 0 principle, Rules.md §2), not 0°C. |
 
 ---
 
 ## 1. `fire_hotspots`
 
-Menyimpan hasil ingest dari NASA FIRMS, diperkaya dengan skor risiko GFW dan AQI terkait.
+Stores ingest results from NASA FIRMS, enriched with GFW risk scores and related AQI data.
 
 ```php
 Schema::create('fire_hotspots', function (Blueprint $table) {
     $table->id();
 
-    // Dari NASA FIRMS
+    // From NASA FIRMS
     $table->decimal('latitude', 9, 5);
     $table->decimal('longitude', 9, 5);
     $table->decimal('brightness', 8, 2)->nullable();
@@ -36,18 +37,20 @@ Schema::create('fire_hotspots', function (Blueprint $table) {
     $table->decimal('frp', 8, 2);              // Fire Radiative Power
     $table->enum('daynight', ['D', 'N']);
 
-    // Dari Global Forest Watch (GFW) — tree cover loss sebagai proksi risiko
-    $table->decimal('gfw_risk_score', 8, 6)->nullable(); // null = gagal/tidak tersedia
+    // From Global Forest Watch (GFW) — tree cover loss as a risk proxy
+    $table->decimal('gfw_risk_score', 8, 6)->nullable(); // null = failed/unavailable
     $table->enum('gfw_risk_category', [
-        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'
+        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na' // low, medium, high, very high, n/a
     ])->default('na');
 
-    // Dari IQAir (diisi untuk hotspot kategori tinggi/sangat_tinggi)
+    // From IQAir (populated for high/very-high category hotspots)
     $table->unsignedInteger('nearest_city_aqi')->nullable();
     $table->string('nearest_city_name', 100)->nullable();
     $table->string('nearest_city_state', 100)->nullable();
+    $table->decimal('nearest_city_temp_c', 5, 2)->nullable();       // air temperature (°C), IQAir response field `tp`
+    $table->decimal('nearest_city_heat_index_c', 5, 2)->nullable(); // perceived temperature (°C), IQAir response field `heatIndex`
 
-    // Referensi wilayah administratif (opsional, hasil reverse-lookup)
+    // Administrative region reference (optional, result of reverse lookup)
     $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
 
     $table->timestamp('fetched_at')->useCurrent();
@@ -61,7 +64,7 @@ Schema::create('fire_hotspots', function (Blueprint $table) {
 
 ## 2. `regions`
 
-Daftar wilayah administratif (kabupaten/kota) sebagai unit agregasi. Diseed dari data batas wilayah publik, disederhanakan ke level kabupaten/kota.
+List of administrative regions (regency/city) used as the aggregation unit. Seeded from public boundary data, simplified to regency/city level.
 
 ```php
 Schema::create('regions', function (Blueprint $table) {
@@ -80,7 +83,7 @@ Schema::create('regions', function (Blueprint $table) {
 
 ## 3. `region_priority_scores`
 
-Hasil perhitungan skor prioritas harian per wilayah (lihat `Rules.md` §3 untuk formula).
+Daily priority score calculation results per region (see `Rules.md` §3 for the formula).
 
 ```php
 Schema::create('region_priority_scores', function (Blueprint $table) {
@@ -94,9 +97,9 @@ Schema::create('region_priority_scores', function (Blueprint $table) {
     $table->unsignedInteger('avg_aqi')->nullable();
     $table->decimal('normalized_aqi_impact', 6, 5)->nullable();
 
-    $table->decimal('priority_score', 6, 5); // hasil akhir formula
+    $table->decimal('priority_score', 6, 5); // final formula result
     $table->enum('priority_rank_category', [
-        'rendah', 'sedang', 'tinggi', 'sangat_tinggi'
+        'rendah', 'sedang', 'tinggi', 'sangat_tinggi' // low, medium, high, very high
     ]);
 
     $table->timestamps();
@@ -108,21 +111,23 @@ Schema::create('region_priority_scores', function (Blueprint $table) {
 
 ## 4. `area_check_cache`
 
-Cache hasil query on-demand fitur "Cek Daerah Kamu" (per koordinat yang di-*round* ke presisi tertentu, untuk mengurangi panggilan API berulang di lokasi yang sama).
+Cache for on-demand query results from the "Check Your Area" feature (per coordinate rounded to a certain precision, to reduce repeated API calls for the same location).
 
 ```php
 Schema::create('area_check_cache', function (Blueprint $table) {
     $table->id();
-    $table->decimal('lat_rounded', 7, 3);   // dibulatkan ~100m presisi
+    $table->decimal('lat_rounded', 7, 3);   // rounded to ~100m precision
     $table->decimal('lon_rounded', 7, 3);
 
     $table->decimal('gfw_risk_score', 8, 6)->nullable();
     $table->enum('gfw_risk_category', [
-        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'
+        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na' // low, medium, high, very high, n/a
     ])->default('na');
 
     $table->unsignedInteger('aqi')->nullable();
     $table->string('nearest_city_name', 100)->nullable();
+    $table->decimal('temp_c', 5, 2)->nullable();       // air temperature (°C), IQAir response field `tp`
+    $table->decimal('heat_index_c', 5, 2)->nullable(); // perceived temperature (°C), IQAir response field `heatIndex`
 
     $table->timestamp('cached_at');
     $table->timestamps();
@@ -133,12 +138,12 @@ Schema::create('area_check_cache', function (Blueprint $table) {
 
 ## 5. `gfw_risk_cache`
 
-Cache khusus hasil analisis GFW (geostore + tree cover loss) per koordinat, terpisah dari `area_check_cache` karena TTL-nya jauh lebih panjang (data historis, bukan real-time) dan digunakan bersama baik oleh proses ingest batch maupun fitur on-demand.
+Cache specifically for GFW analysis results (geostore + tree cover loss) per coordinate, kept separate from `area_check_cache` because its TTL is much longer (historical data, not real-time) and it's shared by both the batch ingest process and the on-demand feature.
 
 ```php
 Schema::create('gfw_risk_cache', function (Blueprint $table) {
     $table->id();
-    $table->decimal('lat_rounded', 7, 3);   // dibulatkan ~100m presisi
+    $table->decimal('lat_rounded', 7, 3);   // rounded to ~100m precision
     $table->decimal('lon_rounded', 7, 3);
 
     $table->string('geostore_id', 100)->nullable();
@@ -147,7 +152,7 @@ Schema::create('gfw_risk_cache', function (Blueprint $table) {
     $table->decimal('loss_percentage', 6, 2)->nullable();
     $table->decimal('risk_score', 6, 5)->nullable();
     $table->enum('risk_category', [
-        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na'
+        'rendah', 'sedang', 'tinggi', 'sangat_tinggi', 'na' // low, medium, high, very high, n/a
     ])->default('na');
 
     $table->timestamp('cached_at');
@@ -159,7 +164,7 @@ Schema::create('gfw_risk_cache', function (Blueprint $table) {
 
 ## 6. `data_ingestion_logs`
 
-Log eksekusi scheduled job — penting untuk debugging dan transparansi "kapan data terakhir diperbarui" yang ditampilkan di UI.
+Scheduled job execution log — important for debugging and transparency of the "data last updated" timestamp shown in the UI.
 
 ```php
 Schema::create('data_ingestion_logs', function (Blueprint $table) {
@@ -174,25 +179,25 @@ Schema::create('data_ingestion_logs', function (Blueprint $table) {
 });
 ```
 
-## 7. Relasi Antar Tabel (Ringkas)
+## 7. Table Relations (Summary)
 
 ```
 regions            1 ── * fire_hotspots
 regions            1 ── * region_priority_scores
 ```
 
-## 8. Kategorisasi Skor Risiko GFW (Referensi)
+## 8. GFW Risk Score Categorization (Reference)
 
-Berdasarkan sampel 20 titik koordinat di area rawan karhutla Kalimantan dan Sumatra, diuji melalui pipeline `GfwService` (`loss_percentage` min 0,43%, max 24,37%, rata-rata 11,79%, median 12,18%, dari 19 titik valid — 1 titik gagal dan dikategorikan `na`) dalam radius buffer 5 km. Data mentah per titik didokumentasikan di Appendix A proposal kompetisi dan `Progress.md`.
+Based on a sample of 20 coordinate points in fire-prone areas of Kalimantan and Sumatra, tested via the `GfwService` pipeline (`loss_percentage` min 0.43%, max 24.37%, mean 11.79%, median 12.18%, from 19 valid points — 1 point failed and was categorized `na`) within a 5 km buffer radius. Raw per-point data is documented in Appendix A of the competition proposal and in `Progress.md`.
 
-| Kategori | Range `loss_percentage` | Range `risk_score` (ternormalisasi 0–1) |
+| Category | `loss_percentage` Range | `risk_score` Range (normalized 0–1) |
 |---|---|---|
-| Rendah | 0% – 13% | 0 – 0,37 |
-| Sedang | 13% – 18% | 0,37 – 0,51 |
-| Tinggi | 18% – 23% | 0,51 – 0,66 |
-| Sangat Tinggi | 23% – 35%+ | 0,66 – 1,0 |
-| N/A | Query GFW gagal / geostore tidak dapat dibuat | — |
+| Low | 0% – 13% | 0 – 0.37 |
+| Medium | 13% – 18% | 0.37 – 0.51 |
+| High | 18% – 23% | 0.51 – 0.66 |
+| Very High | 23% – 35%+ | 0.66 – 1.0 |
+| N/A | GFW query failed / geostore could not be created | — |
 
-Ambang batas ini didefinisikan di satu tempat (`config/ember.php`), **bukan** hardcoded berulang di berbagai bagian kode — lihat `Rules.md` §2.
+These thresholds are defined in a single place (`config/ember.php`), **not** hardcoded repeatedly across the codebase — see `Rules.md` §2.
 
-**Catatan keterbatasan:** threshold ini dihitung dari sampel 20 titik acak, bukan sensus penuh atau data historis multi-tahun. Untuk kebutuhan MVP kompetisi ini defensible dan terdokumentasi prosesnya, namun dapat diperbarui dengan sampel lebih besar (50–100 titik) di iterasi berikutnya bila diperlukan ketelitian statistik lebih tinggi.
+**Limitation note:** these thresholds are calculated from a random sample of 20 points, not a full census or multi-year historical data. This is defensible and well-documented for the needs of this competition's MVP, but can be updated with a larger sample (50–100 points) in a future iteration if higher statistical precision is needed.

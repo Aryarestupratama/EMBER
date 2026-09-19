@@ -1,118 +1,118 @@
 # Design Document — EMBER
 **Early Monitoring for Burning Environment & Reforestation**
 
-Dokumen ini mendefinisikan arah desain produk EMBER: positioning, sistem visual (warna & tipografi), struktur halaman, komponen UI, serta aturan aksesibilitas dan atribusi data.
+This document defines the design direction of the EMBER product: positioning, visual system (color & typography), page structure, UI components, and accessibility and data attribution rules.
 
 ---
 
 ## 1. Positioning & Tone
 
-EMBER adalah platform **data-driven**, bukan platform kampanye atau lifestyle. Desain harus terasa kredibel dan tenang — menyampaikan urgensi tanpa terasa alarmis atau menghakimi pihak manapun.
+EMBER is a **data-driven** platform, not a campaign or lifestyle platform. The design must feel credible and calm — conveying urgency without feeling alarmist or blaming any particular party.
 
-Referensi gaya layout diambil dari Reforestum (struktur landing page, kebersihan tipografi), dengan penyesuaian:
-- Hero section menampilkan **produk nyata (peta live)**, bukan ilustrasi dekoratif.
-- Palet warna diarahkan ke kesan "instrumen pemantauan resmi", bukan "produk konsumer santai".
+The layout style reference is drawn from Reforestum (landing page structure, typographic cleanliness), with adjustments:
+- The hero section shows a **real product (a live map)**, not a decorative illustration.
+- The color palette is aimed at an "official monitoring instrument" feel, not a "casual consumer product" feel.
 
-## 2. Palet Warna
+## 2. Color Palette
 
-| Peran | Warna | Kegunaan |
+| Role | Color | Usage |
 |---|---|---|
-| Primary (Forest) | Hijau tua `#1B4332` – `#2D6A4F` | Header, elemen brand, area "aman/rendah risiko" |
-| Secondary (Fresh Green) | `#40916C` – `#74C69D` | Aksen tombol, elemen solusi/reforestasi |
-| Alert — Tinggi | `#E85D04` (oranye bara) | Kategori risiko tinggi |
-| Alert — Kritis | `#D00000` (merah bara) | Kategori risiko sangat tinggi |
-| Netral | `#F8F9FA`, `#343A40` | Background, teks |
-| Info | `#FFD60A` (kuning amber) | Kategori risiko sedang, highlight data |
+| Primary (Forest) | Dark green `#1B4332` – `#2D6A4F` | Header, brand elements, "safe/low risk" areas |
+| Secondary (Fresh Green) | `#40916C` – `#74C69D` | Button accents, solution/reforestation elements |
+| Alert — High | `#E85D04` (ember orange) | High risk category |
+| Alert — Critical | `#D00000` (ember red) | Very high risk category |
+| Neutral | `#F8F9FA`, `#343A40` | Background, text |
+| Info | `#FFD60A` (amber yellow) | Medium risk category, data highlights |
 
-**Prinsip penggunaan:** warna merah/oranye **hanya** dipakai untuk indikator risiko/data, tidak untuk elemen UI dekoratif — agar urgensi visual tetap bermakna dan tidak "menangis serigala".
+**Usage principle:** red/orange colors are used **only** for risk/data indicators, not for decorative UI elements — so the visual urgency stays meaningful and doesn't "cry wolf."
 
-## 3. Tipografi
+## 3. Typography
 
-- **Judul/heading:** sans-serif tegas (mis. Inter/Poppins Bold) — kesan modern & teknis.
-- **Body text:** sans-serif reguler, kontras tinggi untuk keterbacaan data numerik.
-- **Angka/statistik besar** (skor, AQI, jumlah hotspot): menggunakan tabular numerals agar rapi saat berubah (live update).
+- **Titles/headings:** bold sans-serif (e.g. Inter/Poppins Bold) — modern & technical feel.
+- **Body text:** regular sans-serif, high contrast for numeric data readability.
+- **Large numbers/statistics** (scores, AQI, hotspot counts): use tabular numerals to stay neat during live updates.
 
-## 4. Struktur Halaman
+## 4. Page Structure
 
 ### 4.1 Landing Page (`/`)
 
-1. **Hero** — headline singkat + ringkasan misi + live map preview (embed kecil atau screenshot dashboard nyata) + CTA "Buka Dashboard"
-2. **The Problem** — statistik singkat live (otomatis dari data): jumlah hotspot terdeteksi hari ini, jumlah wilayah risiko tinggi
-3. **How it Works** — 3 langkah: Monitor (FIRMS) → Analisis (skor risiko berbasis data deforestasi GFW) → Bertindak (rekomendasi wilayah & cek lokasi)
-4. **Data Sources** — logo/nama NASA FIRMS, Global Forest Watch, IQAir sebagai trust signal, disertai penjelasan singkat kredibilitas masing-masing
-5. **CTA Penutup** — mendorong pengguna ke "Cek Daerah Kamu" atau "Buka Dashboard"
+1. **Hero** — short headline + mission summary + live map preview (small embed or real dashboard screenshot) + "Open Dashboard" CTA
+2. **The Problem** — short live statistics (automatic from data): number of hotspots detected today, number of high-risk regions
+3. **How it Works** — 3 steps: Monitor (FIRMS) → Analyze (data-driven risk score based on GFW deforestation data) → Act (region recommendations & location check)
+4. **Data Sources** — NASA FIRMS, Global Forest Watch, IQAir logos/names as trust signals, with a brief explanation of each one's credibility
+5. **Closing CTA** — drives users to "Check Your Area" or "Open Dashboard"
 
 ### 4.2 Dashboard (`/dashboard`)
 
-- **Search bar besar** di atas peta — "Cek daerah kamu..." (dengan autocomplete kota)
-- **Peta interaktif nasional** (Leaflet) — marker/cluster hotspot berwarna sesuai kategori risiko
-- **Panel statistik** (3–4 kartu kecil): total hotspot aktif, wilayah risiko tinggi, kota AQI terburuk saat ini, waktu pembaruan data terakhir
-- **Panel Ranking** — daftar wilayah dengan Priority Score tertinggi (5–10 wilayah), tiap item dapat diklik menuju halaman detail. Mode bandingkan tidak selalu tampil — dipicu melalui tombol "Bandingkan Wilayah" di header panel, yang baru memunculkan checkbox per item (maksimum 3 wilayah sekaligus) beserta panduan singkat cara pakai, agar tampilan default tetap bersih bagi pengguna yang tidak berniat membandingkan. Memilih ≥2 wilayah memicu `CompareTrigger` lalu `CompareModal` (lihat §6) tanpa meninggalkan halaman Dashboard
-- **Filter** — tanggal, kategori risiko, provinsi
+- **Large search bar** above the map — "Check your area..." (with city autocomplete)
+- **National interactive map** (Leaflet) — hotspot markers/clusters colored by risk category
+- **Statistics panel** (3–4 small cards): total active hotspots, high-risk regions, city with the current worst AQI, last data update time
+- **Ranking panel** — list of regions with the highest Priority Score (5–10 regions), each item clickable to go to the detail page. Compare mode is not always shown — it is triggered via a "Compare Regions" button in the panel header, which only then reveals per-item checkboxes (maximum 3 regions at once) along with a brief usage guide, so the default view stays clean for users who don't intend to compare. Selecting ≥2 regions triggers `CompareTrigger` then `CompareModal` (see §6) without leaving the Dashboard page
+- **Filters** — date, risk category, province
 
-### 4.3 Halaman Detail Lokasi (`/area/{id}`)
+### 4.3 Location Detail Page (`/area/{id}`)
 
-- Kartu ringkasan utama (lihat wireframe pada §5)
-- Peta zoom ke wilayah dengan hotspot di sekitarnya
-- Breakdown skor: kontribusi risiko deforestasi (GFW) vs frekuensi hotspot vs dampak AQI
-- Rekomendasi aksi kontekstual (teks singkat, bukan generik)
+- Main summary card (see wireframe in §5)
+- Map zoomed to the region with surrounding hotspots
+- Score breakdown: contribution of deforestation risk (GFW) vs. hotspot frequency vs. AQI impact
+- Contextual action recommendations (short text, not generic)
 
-### 4.4 Halaman Metodologi (`/about`)
+### 4.4 Methodology Page (`/about`)
 
-- Penjelasan 3 sumber data dan cara skor prioritas dihitung, termasuk penegasan bahwa skor risiko merupakan **proksi berbasis data deforestasi historis** (tree cover loss GFW dalam radius 5 km), bukan prediksi resmi dari lembaga pemerintah
-- Disclaimer keterbatasan data (radius analisis 5 km, potensi delay data satelit, threshold berbasis sampel pengujian awal, dsb.)
-- Pernyataan netralitas platform (data-driven, bukan advokasi kebijakan)
+- Explanation of the 3 data sources and how the priority score is calculated, including a statement that the risk score is a **proxy based on historical deforestation data** (GFW tree cover loss within a 5 km radius), not an official prediction from a government agency
+- Disclaimer on data limitations (5 km analysis radius, potential satellite data delay, threshold based on an initial test sample, etc.)
+- Statement of platform neutrality (data-driven, not policy advocacy)
 
-## 5. Wireframe — Kartu Ringkasan "Cek Daerah Kamu"
+## 5. Wireframe — "Check Your Area" Summary Card
 
 ```
 ┌─────────────────────────────────────────┐
-│ 📍 Palembang, Sumatera Selatan            │
+│ 📍 Palembang, South Sumatra               │
 │                                           │
-│ 🔥 Status Risiko Karhutla                │
-│    ●●●●○  TINGGI (skor 0.72)             │
-│    berdasarkan data deforestasi historis │
+│ 🔥 Forest/Land Fire Risk Status          │
+│    ●●●●○  HIGH (score 0.72)              │
+│    based on historical deforestation data│
 │                                           │
-│ 🌫️ Kualitas Udara Saat Ini                │
-│    AQI 156 — Tidak Sehat                 │
+│ 🌫️ Current Air Quality                    │
+│    AQI 156 — Unhealthy                   │
 │                                           │
-│ 📡 Hotspot Terdekat                      │
-│    3 titik dalam radius 25 km            │
-│    Terdekat: 8 km dari lokasi kamu       │
+│ 📡 Nearest Hotspots                      │
+│    3 points within a 25 km radius        │
+│    Nearest: 8 km from your location      │
 │                                           │
-│ 💡 Rekomendasi                           │
-│    Kurangi aktivitas luar ruangan.       │
-│    Wilayah ini prioritas tinggi untuk    │
-│    monitoring & mitigasi karhutla.       │
+│ 💡 Recommendation                        │
+│    Reduce outdoor activity.              │
+│    This region is high priority for      │
+│    monitoring & fire mitigation.         │
 │                                           │
-│    [ Lihat di Peta ]  [ Detail Wilayah ] │
+│    [ View on Map ]  [ Region Detail ]    │
 └─────────────────────────────────────────┘
 ```
 
-## 6. Komponen UI Kunci
+## 6. Key UI Components
 
-| Komponen | Fungsi |
+| Component | Function |
 |---|---|
-| `Navbar` | Navigasi utama, digunakan melalui `AppLayout` di seluruh halaman (tidak diduplikasi per-page). Transparan saat berada di posisi paling atas halaman (menyatu dengan hero/canvas), berubah menjadi solid (`bg-white/80` + `backdrop-blur-md`) begitu discroll, agar teks tetap terbaca di atas konten apa pun di belakangnya — termasuk `MapView`, yang stacking-nya (Leaflet pane/kontrol) sengaja ditempatkan di bawah navbar. Item aktif ditandai underline; item lain mendapat underline saat hover. Dibangun di atas primitive `NavigationMenu` (shadcn/ui, preset Base UI) |
-| `Footer` | Atribusi sumber data (lihat §8), digunakan melalui `AppLayout`. Memiliki varian gelap (`dark`) untuk dipasang di atas `bg-forest-dark` (Landing), dan varian terang untuk halaman lain |
-| `RiskBadge` | Badge warna + label kategori risiko (Rendah/Sedang/Tinggi/Sangat Tinggi/N/A), digunakan konsisten di seluruh halaman. Kategori N/A dirender berbeda **secara struktural**, bukan sekadar beda warna — border dashed dan ikon tanya menggantikan dot solid, agar tidak disalahartikan sebagai "risiko rendah versi pucat" (menegaskan prinsip null ≠ 0 dari Rules.md §2) |
-| `MapView` | Wrapper Leaflet, menerima props hotspot list & mode (nasional / zoom-lokasi / selectable) |
-| `SummaryCard` | Kartu hasil "Cek Daerah Kamu" |
-| `RegionRankingList` | Daftar wilayah prioritas, dapat diklik. Mode bandingkan (checkbox + panduan singkat) tersembunyi secara default, baru tampil setelah tombol "Bandingkan Wilayah" di header ditekan — progressive disclosure agar tampilan default tetap bersih |
-| `StatTile` | Kartu statistik kecil untuk dashboard, menampilkan status "Data tidak tersedia" secara eksplisit untuk nilai kosong |
-| `ScoreBreakdown` | Visualisasi kontribusi tiap komponen formula Priority Score (risiko/frekuensi/AQI) dengan progress bar proporsional terhadap bobot masing-masing; komponen data yang tidak tersedia ditandai pola bergaris, bukan ditampilkan sebagai 0% |
-| `SourceCredit` | Komponen kecil yang menampilkan atribusi sumber data (digunakan di footer/peta) |
-| `CompareTrigger` | Bar mengambang (sticky) di bawah `RegionRankingList`, muncul saat ≥2 wilayah dicentang untuk dibandingkan; menampilkan chip nama wilayah terpilih (dapat dihapus satu per satu) dan tombol "Bandingkan" |
-| `CompareModal` | Dialog overlay yang merender 2–3 instance `ScoreBreakdown` bersebelahan untuk wilayah yang dipilih, memuat data via endpoint ringan tanpa reload halaman |
+| `Navbar` | Main navigation, used via `AppLayout` across all pages (not duplicated per page). Transparent while at the very top of the page (blending with the hero/canvas), becomes solid (`bg-white/80` + `backdrop-blur-md`) once scrolled, so text stays readable over whatever content is behind it — including `MapView`, whose stacking (Leaflet pane/controls) is deliberately placed below the navbar. The active item is marked with an underline; other items get an underline on hover. Built on top of the `NavigationMenu` primitive (shadcn/ui, Base UI preset) |
+| `Footer` | Data source attribution (see §8), used via `AppLayout`. Has a dark variant for use over `bg-forest-dark` (Landing), and a light variant for other pages |
+| `RiskBadge` | Color badge + risk category label (Low/Medium/High/Very High/N/A), used consistently across all pages. The N/A category is rendered differently **structurally**, not just by a different color — a dashed border and a question-mark icon replace the solid dot, so it isn't mistaken for a "pale version of low risk" (reinforcing the null ≠ 0 principle from Rules.md §2) |
+| `MapView` | Leaflet wrapper, accepts hotspot list & mode props (national / location-zoom / selectable) |
+| `SummaryCard` | "Check Your Area" result card |
+| `RegionRankingList` | List of priority regions, clickable. Compare mode (checkboxes + brief guide) is hidden by default, only shown after the "Compare Regions" header button is pressed — progressive disclosure to keep the default view clean |
+| `StatTile` | Small statistic card for the dashboard, explicitly showing a "Data unavailable" status for empty values |
+| `ScoreBreakdown` | Visualization of each Priority Score formula component's contribution (risk/frequency/AQI) with a progress bar proportional to each weight; unavailable data components are marked with a striped pattern, not shown as 0% |
+| `SourceCredit` | Small component displaying data source attribution (used in the footer/map) |
+| `CompareTrigger` | Floating (sticky) bar below `RegionRankingList`, appears when ≥2 regions are checked for comparison; shows chips of selected region names (removable one at a time) and a "Compare" button |
+| `CompareModal` | Overlay dialog rendering 2–3 `ScoreBreakdown` instances side by side for the selected regions, loading data via a lightweight endpoint without a page reload |
 
-## 7. Aksesibilitas & Bahasa
+## 7. Accessibility & Language
 
-- UI menggunakan Bahasa Indonesia sebagai default, dengan toggle Bahasa Inggris yang mencakup **seluruh halaman dan komponen** (bukan hanya landing page & label kategori risiko seperti rencana awal — diperluas 16 September 2026, lihat `Progress.md` §10) untuk audiens juri internasional.
-- Kontras warna kategori risiko diuji agar tetap dapat dibedakan oleh pengguna buta warna (tidak mengandalkan warna semata — selalu disertai label teks/ikon).
-- Seluruh elemen peta memiliki alternatif teks/tabel data untuk aksesibilitas dasar.
+- The UI uses Indonesian as the default, with an English toggle that covers **the entire site and all components** (not just the landing page & risk category labels as originally planned — expanded on September 16, 2026, see `Progress.md` §10) for an international jury audience.
+- Risk category color contrast is tested to remain distinguishable for colorblind users (not relying on color alone — always accompanied by a text label/icon).
+- All map elements have text/table data alternatives for basic accessibility.
 
-## 8. Atribusi Data (Wajib Ditampilkan)
+## 8. Data Attribution (Mandatory Display)
 
-Karena EMBER sepenuhnya bergantung pada data pihak ketiga resmi, atribusi harus tampil jelas di footer setiap halaman yang menampilkan data:
+Because EMBER relies entirely on official third-party data, attribution must be clearly displayed in the footer of every page that shows data:
 
-> Data hotspot: NASA FIRMS · Data risiko deforestasi: Global Forest Watch · Data kualitas udara: IQAir · Batas wilayah administratif: GADM v4.1
+> Hotspot data: NASA FIRMS · Deforestation risk data: Global Forest Watch · Air quality data: IQAir · Administrative boundary data: GADM v4.1
